@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require 'elaine/distributed/coordinator'
+require 'elaine/distributed/coordinator_cli'
 
 Elaine::Distributed::CoordinatorCLI.start
 
