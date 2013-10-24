@@ -1,6 +1,6 @@
-require 'pregel/vertex'
-require 'pregel/worker'
-require 'pregel/coordinator'
+require 'elaine/vertex'
+require 'elaine/worker'
+require 'elaine/coordinator'
 
 require 'singleton'
 

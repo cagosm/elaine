@@ -1,17 +1,17 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "pregel/version"
+require "elaine/version"
 
 Gem::Specification.new do |s|
-  s.name        = "pregel"
-  s.version     = Pregel::VERSION
+  s.name        = "elaine"
+  s.version     = Elaine::VERSION
   s.platform    = Gem::Platform::RUBY
-  s.authors     = ["Ilya Grigorik"]
-  s.email       = ["ilya@igvita.com"]
-  s.homepage    = "http://github.com/igrigorik/pregel"
-  s.summary     = "Single-node implementation of Google's Pregel framework for large-scale graph processing."
+  s.authors     = ["Jeremy Blackburn"]
+  s.email       = ["jeremy.blackburn@gmail.com"]
+  # s.homepage    = "http://github.com/igrigorik/pregel"
+  s.summary     = "Distribtuted implementation of Google's Pregel framework for large-scale graph processing. Forked from http://github.com/igrigorik/pregel"
   s.description = s.summary
-  s.rubyforge_project = "pregel"
+  s.rubyforge_project = "elaine"
 
   s.add_development_dependency "rspec", '~> 2.0.0'
 

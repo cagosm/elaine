@@ -1,6 +1,6 @@
-# Pregel
+# Elaine
 
-Single-node implementation of Google's Pregel framework for graph processing. It does not provide any of the distributed components, but implements the core functional pieces within a single Ruby VM such that you can develop and run iterative graph algorithms as if you had the full power of Pregel at your disposal.
+Multi-node implementation of Google's Pregel framework for graph processing. Forked and modified from https://github.com/igrigorik/pregel. It does not provide any of the distributed components, but implements the core functional pieces within a single Ruby VM such that you can develop and run iterative graph algorithms as if you had the full power of Pregel at your disposal.
 
 To learn more about Pregel see following resources:
 

@@ -1,6 +1,6 @@
-require 'lib/pregel'
+require 'lib/elaine'
 
-include Pregel
+include Elaine
 
 class AddVertex < Vertex
   def compute
