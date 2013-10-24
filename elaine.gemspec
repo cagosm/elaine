@@ -15,6 +15,7 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency "rspec"
   s.add_dependency "celluloid-io"
+  s.add_dependency "dcell"
   s.add_dependency "thor"
   s.add_dependency "dnssd"
 
