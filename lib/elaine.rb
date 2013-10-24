@@ -1,6 +1,7 @@
 require 'elaine/vertex'
 require 'elaine/worker'
 require 'elaine/coordinator'
+require 'elaine/distributed/coordinator'
 
 require 'singleton'
 
