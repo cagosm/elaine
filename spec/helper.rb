@@ -1,4 +1,4 @@
-require 'lib/elaine'
+require 'elaine'
 
 include Elaine
 
