@@ -8,12 +8,12 @@ Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Jeremy Blackburn"]
   s.email       = ["jeremy.blackburn@gmail.com"]
-  # s.homepage    = "http://github.com/igrigorik/pregel"
+  s.homepage    = "http://bitbucket.org/worst/elaine"
   s.summary     = "Distribtuted implementation of Google's Pregel framework for large-scale graph processing. Forked from http://github.com/igrigorik/pregel"
   s.description = s.summary
   s.rubyforge_project = "elaine"
 
-  s.add_development_dependency "rspec", '~> 2.0.0'
+  s.add_development_dependency "rspec"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
