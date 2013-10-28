@@ -1,5 +1,5 @@
 require 'thor'
-require 'elaine/distributed/coordinator'
+require 'elaine/distributed/worker'
 require 'securerandom' # for uuid
 require 'dcell'
 
@@ -18,8 +18,9 @@ module Elaine
         port = options[:port]
         job_id = SecureRandom.uuid
         # id = 
-        DCell.start id: "elaine-worker-#{job_id}", addr: "tcp://#{host}:#{port}"
-        supervisor = Elaine::Distributed::Worker.supervise
+        # DCell.start id: "elaine-worker-#{job_id}", addr: "tcp://#{host}:#{port}"
+        DCell.start addr: "tcp://#{host}:#{port}"
+        supervisor = Elaine::Distributed::Worker.supervise_as :worker
         trap("INT") {supervisor.terminate; exit }
 
         # register the service

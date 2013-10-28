@@ -18,8 +18,9 @@ module Elaine
         port = options[:port]
         job_id = SecureRandom.uuid
         # id = 
-        DCell.start id: "elaine-coordinator", addr: "tcp://#{host}:#{port}"
-        supervisor = Elaine::Distributed::Coordinator.supervise_as :elaine_coordinator
+        # DCell.start id: "elaine.coordinator", addr: "tcp://#{host}:#{port}", registry: {adapter: 'redis', namespace: "elaine-#{job_id}"}
+        DCell.start id: "elaine.coordinator", addr: "tcp://#{host}:#{port}"
+        supervisor = Elaine::Distributed::Coordinator.supervise_as :coordinator
         trap("INT") {supervisor.terminate; exit }
 
         # register the service

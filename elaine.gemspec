@@ -14,10 +14,13 @@ Gem::Specification.new do |s|
   s.rubyforge_project = "elaine"
 
   s.add_development_dependency "rspec"
+  s.add_development_dependency "pry"
+  
   s.add_dependency "celluloid-io"
   s.add_dependency "dcell"
   s.add_dependency "thor"
-  s.add_dependency "dnssd"
+  # s.add_dependency "dnssd"
+  s.add_dependency "activesupport"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
