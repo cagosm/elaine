@@ -8,7 +8,7 @@ module Elaine
       attr_reader :id
       attr_accessor :value, :messages
 
-      def initialize(id, value, post_office, *outedges)
+      def initialize(id, value, postoffice, *outedges)
         # Might be better to grab post_office dynamically with Celluloid::Actor ?
         @id = id
         @value = value
@@ -16,7 +16,7 @@ module Elaine
         @messages = []
         @active = true
         @superstep = 0
-        @post_office = post_office
+        @postoffice = postoffice
       end
 
       def edges
@@ -29,7 +29,7 @@ module Elaine
 
       def deliver(to, msg)
         # PostOffice.instance.deliver(to, msg)
-        to.deliver(msg)
+        @postoffice.deliver(to, msg)
       end
 
       def step

@@ -1,8 +1,6 @@
 # require 'dnssd'
 # require 'celluloid/io'
 require 'dcell'
-require 'celluloid/autostart'
-require
 
 module Elaine
   module Distributed
@@ -14,6 +12,7 @@ module Elaine
       attr_reader :workers
       attr_reader :partitions
       attr_reader :num_partitions
+      # attr_reader :graph
       # attr_reader :zipcodes
 
       # attr_reader :server
@@ -23,7 +22,7 @@ module Elaine
         @num_partitions = num_partitions
         @graph = graph
         info "GOT GRAPH: #{graph}"
-        partitions = Hash.new
+        @partitions = Hash.new
 
       end
 
@@ -31,30 +30,38 @@ module Elaine
         puts "FART"
       end
 
+      def graph=(g)
+        debug "Setting graph"
+        @graph = g
+        debug "done setting graph"
+      end
+
       def zipcodes
         zips = {}
         @partitions.each_pair do |zip, vertices|
           vertices.each do |vertex|
-            zips[vertex] = zip
+            zips[vertex[:id]] = zip
           end
         end
         zips
       end
 
-      def partition(graph)
+      def partition
         # not sure if we should re-initialize or not
-        # @zipcodes = Hash.new
+        # @partitions = Hash.new
 
-        size = (graph.size.to_f / num_partitions).ceil
+        # size = (graph.size.to_f / num_partitions).ceil
+        size = (@graph.size.to_f / workers.size).ceil
         # graph.each_slice(size).with_index do |slice, index|
         #   slice.each do |vertex_json|
         #     zipcodes[vertex_json[:id]] = workers[index]
         #   end
         # end
 
-        graph.each_slice(size).with_index do |slice, index|
+        @graph.each_slice(size).with_index do |slice, index|
           @partitions[@workers[index]] = slice
         end
+        
         @partitions
       end
 
@@ -63,16 +70,17 @@ module Elaine
         # i think it makes more sense to just have multiple nodes running on the
         # same machine instead of multiple workers in a single node
         # This should be re-evaluated at some point in the future.
-        info "Registering worker: #{worker_id}"
-        unless workers.include? worker_node
-          workers << worker_node
+        info "Registering worker: #{worker_node}"
+        unless @workers.include? worker_node
+          @workers << worker_node
         end
       end
 
       def run_job
         # zipcodes = {}
         debug "partitioning"
-        partition(@graph)
+        partition
+        debug "Partitions: #{@partitions}"
 
         # distribute the zipcodes
         debug "building zipcodes"

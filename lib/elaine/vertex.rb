@@ -21,8 +21,7 @@ module Elaine
     end
 
     def deliver(to, msg)
-      # PostOffice.instance.deliver(to, msg)
-      to.deliver(msg)
+      PostOffice.instance.deliver(to, msg)
     end
 
     def step

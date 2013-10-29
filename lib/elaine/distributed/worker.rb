@@ -4,6 +4,7 @@ module Elaine
   module Distributed
     class Worker
       include Celluloid
+      include Celluloid::Logger
 
       attr_reader :vertices, :active
 
@@ -17,16 +18,24 @@ module Elaine
 
         # @coordinator_node = DCell::Node["elaine.coordinator"]
         @coordinator_node = coordinator_node
-        DCell::Node[@coordinator_node][:coordinator].register_worker DCell.me
+        DCell::Node[@coordinator_node][:coordinator].register_worker DCell.me.id
 
         Elaine::Distributed::PostOffice.supervise_as :postoffice
         # this could/should probably be done in the constructor
         Celluloid::Actor[:postoffice].zipcodes = zipcodes
+        @vertices = []
         # self.init_graph(g)
       end
 
       def init_graph(g=[])
          raise 'empty worker graph' if g.empty?
+         if @vertices.size > 0
+          @vertices.each do |v|
+            Celluloid::Actor[v].terminate
+          end
+         end
+         @vertices = []
+         # raise "Graph already initialized!" if @vertices.size > 0
 
          # we are going to assume that graphs come in as json documents
          # *describing* the graph.
@@ -37,6 +46,10 @@ module Elaine
           n[:klazz].supervise_as n[:id], n[:id], n[:value], Celluloid::Actor[:postoffice], n[:outedges]
           @vertices << n[:id]
          end
+         @active = @vertices.size
+
+         debug "There are #{@vertices.size} vertices in this worker."
+
       end
 
       def superstep
@@ -44,14 +57,14 @@ module Elaine
         @vertices.each do |v|
           vertex = Celluloid::Actor[v]
           # v.messages = PostOffice.instance.read(v.id)
-          v.messages = Celluloid::Actor[:postoffice].read!
-          v.active! if v.messages.size > 0
+          vertex.messages = Celluloid::Actor[:postoffice].read!(vertex.id)
+          vertex.active! if vertex.messages.size > 0
         end
 
-        active = @vertices.select {|v| v.active?}
-        active.each {|v| v.step}
+        active = @vertices.select {|v| Celluloid::Actor[v].active?}
+        active.each {|v| Celluloid::Actor[v].step}
 
-        @active = active.select {|v| v.active?}.size
+        @active = active.select {|v| Celluloid::Actor[v].active?}.size
         
       end
     end # class Worker
