@@ -5,25 +5,41 @@ describe Elaine::Distributed::Coordinator do
   #   lambda { Coordinator.new([]) }.should raise_error
   # end
 
+  before(:each) do
+
+    TestCoordinator.start
+    TestCoordinator.wait_until_ready
+    TestWorker1.start
+    TestWorker1.wait_until_ready
+    TestWorker2.start
+    TestWorker2.wait_until_ready
+  end
+
+  after(:each) do
+    TestWorker1.stop
+    TestWorker2.stop
+    TestCoordinator.stop
+  end
+
   let(:graph) do
     [
       {
         klazz: DistributedAddVertex,
         id: :igvita,
         value: 1,
-        outedges: :wikipedia
+        outedges: [:wikipedia]
       },
       {
         klazz: DistributedAddVertex,
         id: :wikipedia,
         value: 2,
-        outedges: :google
+        outedges: [:google]
       },
       {
         klazz: DistributedAddVertex,
         id: :google,
         value: 1,
-        outedges: :wikipedia
+        outedges: [:wikipedia]
       }
     ]
   end
@@ -47,7 +63,7 @@ describe Elaine::Distributed::Coordinator do
   #   @w2_superviser = DCell.start id: "test.elaine.worker2", addr: "tcp://127.0.0.1:8092"
   # end
 
-  it 'should partition graphs with variable worker sizes'
+  # it 'should partition graphs with variable worker sizes'
   # do
 
    # TestCoordinator.start
@@ -107,32 +123,6 @@ describe Elaine::Distributed::Coordinator do
       end
     end
   end
-  # it 'should schedule workers to run until there are no active vertices' do
-  #   c = Coordinator.new(graph)
-  #   c.run
-
-  #   c.workers.each do |w|
-  #     w.vertices.each do |v|
-  #       v.value.should == 5
-  #     end
-  #   end
-  # end
-
-  # context 'PageRank' do
-  #   class PageRankVertex < Vertex
-  #     def compute
-  #       if superstep >= 1
-  #         sum = messages.inject(0) {|total,msg| total += msg; total }
-  #         @value = (0.15 / 3) + 0.85 * sum
-  #       end
-
-  #       if superstep < 30
-  #         deliver_to_all_neighbors(@value / neighbors.size)
-  #       else
-  #         halt
-  #       end
-  #     end
-  #   end
 
   it "should calculate PageRank of a circular graph" do
     g =[
@@ -140,22 +130,22 @@ describe Elaine::Distributed::Coordinator do
         klazz: DistributedPageRankVertex,
         id: :igvita,
         value: 1,
-        outedges: :wikipedia
+        outedges: [:wikipedia]
       },
       {
         klazz: DistributedPageRankVertex,
         id: :wikipedia,
         value: 1,
-        outedges: :google
+        outedges: [:google]
       },
       {
         klazz: DistributedPageRankVertex,
         id: :google,
         value: 1,
-        outedges: :igvita
+        outedges: [:igvita]
       }
     ]
-    
+
     DCell::Node["test.elaine.coordinator"][:coordinator].graph = g
     DCell::Node["test.elaine.coordinator"][:coordinator].partition
     DCell::Node["test.elaine.coordinator"][:coordinator].run_job
@@ -166,36 +156,45 @@ describe Elaine::Distributed::Coordinator do
       end
     end
   end
-  #   it 'should calculate PageRank of a circular graph' do
-  #     graph = [
-  #       #                   name     value  out-edges
-  #       PageRankVertex.new(:igvita,     1,  :wikipedia),
-  #       PageRankVertex.new(:wikipedia,  1,  :google),
-  #       PageRankVertex.new(:google,     1,  :igvita)
-  #     ]
+  
 
-  #     c = Coordinator.new(graph)
-  #     c.run
+  it "should calculate PageRank of an arbitrary graph" do
+    g = [
+      # page 1 -> page 1, page 2  (0.18)
+      # page 2 -> page 1, page 3  (0.13)
+      # page 3 -> page 3          (0.69)
 
-  #     c.workers.each do |w|
-  #       w.vertices.each do |v|
-  #         (v.value * 100).to_i.should == 33
-  #       end
-  #     end
-  #   end
+      #                   name     value  out-edges
+      {
+        klazz: DistributedPageRankVertex,
+        id: :igvita,
+        value: 1,
+        outedges: [:igvita, :wikipedia]
+      },
+      {
+        klazz: DistributedPageRankVertex,
+        id: :wikipedia,
+        value: 1,
+        outedges: [:igvita, :google]
+      },
+      {
+        klazz: DistributedPageRankVertex,
+        id: :google,
+        value: 1,
+        outedges: [:google]
+      }
+    ]
+    DCell::Node["test.elaine.coordinator"][:coordinator].graph = g
+    DCell::Node["test.elaine.coordinator"][:coordinator].partition
+    DCell::Node["test.elaine.coordinator"][:coordinator].run_job
 
-  it "should calculate PageRank of an arbitrary graph"
-  #   it 'should calculate PageRank of arbitrary graph' do
-  #     graph = [
-  #       # page 1 -> page 1, page 2  (0.18)
-  #       # page 2 -> page 1, page 3  (0.13)
-  #       # page 3 -> page 3          (0.69)
+    zipcodes = DCell::Node["test.elaine.coordinator"][:coordinator].zipcodes
 
-  #       #                   name     value  out-edges
-  #       PageRankVertex.new(:igvita,     1,  :igvita, :wikipedia),
-  #       PageRankVertex.new(:wikipedia,  1,  :igvita, :google),
-  #       PageRankVertex.new(:google,     1,  :google)
-  #     ]
+    (DCell::Node[zipcodes[:igvita]][:igvita].value * 100).ceil.to_i.should == 19
+    (DCell::Node[zipcodes[:wikipedia]][:wikipedia].value * 100).ceil.to_i.should == 13
+    (DCell::Node[zipcodes[:google]][:google].value * 100).to_i.should == 68
+    
+  end
 
   #     c = Coordinator.new(graph)
   #     c.run
@@ -208,6 +207,6 @@ describe Elaine::Distributed::Coordinator do
   #   end
   # end
 
-  it 'should parition nodes by hashing the node id'
-  it 'should allow scheduling multiple partitions to a single worker'
+  # it 'should parition nodes by hashing the node id'
+  # it 'should allow scheduling multiple partitions to a single worker'
 end

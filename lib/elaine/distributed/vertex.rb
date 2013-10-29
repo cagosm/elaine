@@ -8,7 +8,7 @@ module Elaine
       attr_reader :id
       attr_accessor :value, :messages
 
-      def initialize(id, value, postoffice, *outedges)
+      def initialize(id, value, postoffice, outedges)
         # Might be better to grab post_office dynamically with Celluloid::Actor ?
         @id = id
         @value = value
@@ -34,7 +34,7 @@ module Elaine
 
       def step
         @superstep += 1
-        debug "Running super step ##{@superstep}"
+        # debug "Running super step ##{@superstep}"
         compute
       end
 

@@ -102,9 +102,20 @@ module Elaine
           # execute a superstep and wait for workers to complete
           step = @workers.select do |w|
             DCell::Node[w][:worker].active > 0
+          end.map {|w| DCell::Node[w][:worker].future(:init_superstep)}
+          step.map { |f| f.value }
+                    
+          step = @workers.select do |w|
+            DCell::Node[w][:worker].active > 0
           end.map {|w| DCell::Node[w][:worker].future(:superstep)}
 
           step.map { |f| f.value }
+
+          # @workers.select { |w| DCell::Node[w][:worker].active > 0 }.each do |w|
+          #   DCell::Node[w][:worker].superstep
+          # end
+
+
 
           break if @workers.select { |w| DCell::Node[w][:worker].active > 0 }.size.zero?
         end

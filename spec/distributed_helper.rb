@@ -175,19 +175,22 @@ end
 RSpec.configure do |config|
   config.before(:suite) do
     DCell.setup
-    DCell.run!
-
-    TestCoordinator.start
-    TestCoordinator.wait_until_ready
-    TestWorker1.start
-    TestWorker1.wait_until_ready
-    TestWorker2.start
-    TestWorker2.wait_until_ready
+    DCell.run!    
   end
 
-  config.after(:suite) do
-    TestWorker1.stop
-    TestWorker2.stop
-    TestCoordinator.stop
-  end
+  # config.before(:all) do
+
+  #   TestCoordinator.start
+  #   TestCoordinator.wait_until_ready
+  #   TestWorker1.start
+  #   TestWorker1.wait_until_ready
+  #   TestWorker2.start
+  #   TestWorker2.wait_until_ready
+  # end
+
+  # config.after(:all) do
+  #   TestWorker1.stop
+  #   TestWorker2.stop
+  #   TestCoordinator.stop
+  # end
 end

@@ -24,6 +24,7 @@ module Elaine
         # this could/should probably be done in the constructor
         Celluloid::Actor[:postoffice].zipcodes = zipcodes
         @vertices = []
+        @superstep_num = 0
         # self.init_graph(g)
       end
 
@@ -52,17 +53,33 @@ module Elaine
 
       end
 
-      def superstep
-        # Thread.new do
+      # HACK this should be handled better...
+      def init_superstep
+        # need to delivery all messages here first, to avoid race conditions
         @vertices.each do |v|
           vertex = Celluloid::Actor[v]
           # v.messages = PostOffice.instance.read(v.id)
-          vertex.messages = Celluloid::Actor[:postoffice].read!(vertex.id)
+          vertex.messages = Celluloid::Actor[:postoffice].read_all(vertex.id)
           vertex.active! if vertex.messages.size > 0
         end
+      end
+
+      def superstep
+        # Thread.new do
+        # @superstep_num += 1
+        # debug "Running superstep #{@superstep_num}"
+        # @vertices.each do |v|
+        #   vertex = Celluloid::Actor[v]
+        #   # v.messages = PostOffice.instance.read(v.id)
+        #   vertex.messages = Celluloid::Actor[:postoffice].read_all(vertex.id)
+        #   vertex.active! if vertex.messages.size > 0
+        # end
 
         active = @vertices.select {|v| Celluloid::Actor[v].active?}
-        active.each {|v| Celluloid::Actor[v].step}
+
+        futures = active.map { |v| Celluloid::Actor[v].future(:step) }
+        futures.map { |f| f.value }
+        # active.each {|v| Celluloid::Actor[v].step}
 
         @active = active.select {|v| Celluloid::Actor[v].active?}.size
         

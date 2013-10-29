@@ -19,7 +19,7 @@ module Elaine
 
         # do we need to initialize all the mailboxes here?
         # might be smart?
-        # @mailboxes = Hash.new
+        @mailboxes = Hash.new
 
       end
 
@@ -32,11 +32,12 @@ module Elaine
 
 
       def deliver(to, msg)
+        
         node = address(to)
 
         if node.id.eql?(DCell.me.id)
           @mailboxes[to] ||= []
-          @mailboxes[to].push msg
+          @mailboxes[to] << msg
         else
 
           remote_post_office = node[:postoffice]
@@ -45,15 +46,15 @@ module Elaine
       end
 
       def read(mailbox)
-        node = address(to)
+        node = address(mailbox)
         if node.eql?(Dcell.me.id)
-          @mailboxes[to]
+          @mailboxes[mailbox]
         else
-          node[:postoffice].read to
+          node[:postoffice].read mailbox
         end
       end
 
-      def read!(mailbox)
+      def read_all(mailbox)
         node = address(mailbox)
         # debug "node: #{node}"
         # debug "node.id: '#{node.id}'"
