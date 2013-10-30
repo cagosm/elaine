@@ -1,3 +1,8 @@
+# bundle exec ruby triad_census_worker.rb triad.census.elaine.worker1 8101 triad.census.elaine.coordinator
+
+
+
+
 require 'elaine'
 require 'elaine/distributed'
 require 'dcell'

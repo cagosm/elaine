@@ -6,7 +6,7 @@ require 'dcell'
 puts "__FILE__: #{__FILE__}"
 load File.expand_path("./triad_census_vertex.rb")
 
-DCell.start id: "triad.census.elaine.coordinator", addr: "tcp://127.0.0.1:8090"
+DCell.start id: "triad.census.elaine.coordinator", addr: "tcp://127.0.0.1:8100"
 
 Elaine::Distributed::Coordinator.supervise_as :coordinator
 sleep
