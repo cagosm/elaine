@@ -17,7 +17,7 @@ redis_host = ARGV[4] || "slavenode20.cse.usf.edu"
 
 
 
-DCell.start id: node_id, addr: "tcp://#{host_ip}:#{port}", registry: {adapter: 'redis', host: redis_host}
+DCell.start id: node_id, addr: "tcp://#{node_ip}:#{port}", registry: {adapter: 'redis', host: redis_host}
 
 Elaine::Distributed::Worker.supervise_as :worker, coordinator_node: coordinator_node
 sleep
