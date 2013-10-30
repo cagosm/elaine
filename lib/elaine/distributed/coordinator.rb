@@ -98,13 +98,17 @@ module Elaine
 
 
         debug "Running job"
+        step_num = 0
         loop do
+          step_num += 1
           # execute a superstep and wait for workers to complete
+          debug "Initializing superstep #{step_num}"
           step = @workers.select do |w|
             DCell::Node[w][:worker].active > 0
           end.map {|w| DCell::Node[w][:worker].future(:init_superstep)}
           step.map { |f| f.value }
-                    
+
+          debug "Running superstep #{step_num}"
           step = @workers.select do |w|
             DCell::Node[w][:worker].active > 0
           end.map {|w| DCell::Node[w][:worker].future(:superstep)}
@@ -120,6 +124,23 @@ module Elaine
           break if @workers.select { |w| DCell::Node[w][:worker].active > 0 }.size.zero?
         end
         debug "Job finished!"
+      end
+
+      # def each_vertex(&block)
+      #   @workers.each do |w|
+      #     worker_node = DCell::Node[w]
+      #     worker_node[:worker].vertices2.each do |v|
+      #       # yield worker_node[v]
+      #       yield v
+      #     end
+      #   end
+      # end
+
+      def vertex_values(&block)
+        @workers.map do |w|
+          worker_node = DCell::Node[w]
+          worker_node[:worker].vertex_values
+        end.flatten
       end
 
     end # class Coordinator

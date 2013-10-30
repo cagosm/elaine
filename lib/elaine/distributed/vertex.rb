@@ -2,8 +2,8 @@ require 'celluloid'
 module Elaine
   module Distributed
     class Vertex
-      include Celluloid
-      include Celluloid::Logger
+      # include Celluloid
+      # include Celluloid::Logger
 
       attr_reader :id
       attr_accessor :value, :messages
@@ -29,7 +29,9 @@ module Elaine
 
       def deliver(to, msg)
         # PostOffice.instance.deliver(to, msg)
-        @postoffice.deliver(to, msg)
+        # @postoffice.deliver(to, msg)
+
+       @postoffice.deliver(to, msg)
       end
 
       def step
@@ -44,6 +46,8 @@ module Elaine
 
       def superstep; @superstep; end
       def neighbors; @outedges; end
+
+      def vote_to_stop; @active = false; end
 
       def compute; end
     end # class Vertex

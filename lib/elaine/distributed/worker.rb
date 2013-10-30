@@ -6,7 +6,7 @@ module Elaine
       include Celluloid
       include Celluloid::Logger
 
-      attr_reader :vertices, :active
+      attr_reader :vertices, :active, :vertices2
 
       # def initialize(graph = [], id: "elaine-worker", addr: "tcp://127.0.0.1:8096")
       #   raise 'empty worker graph' if graph.empty?
@@ -29,39 +29,46 @@ module Elaine
       end
 
       def init_graph(g=[])
-         raise 'empty worker graph' if g.empty?
-         if @vertices.size > 0
+        raise 'empty worker graph' if g.empty?
+        if @vertices.size > 0
           @vertices.each do |v|
-            Celluloid::Actor[v].terminate
+            # Celluloid::Actor[v].terminate
           end
-         end
-         @vertices = []
-         # raise "Graph already initialized!" if @vertices.size > 0
+        end
+        @vertices = []
+        # raise "Graph already initialized!" if @vertices.size > 0
 
-         # we are going to assume that graphs come in as json documents
-         # *describing* the graph.
-         # @vertices = graph
-         # @active   = graph.size
-
-         g.each do |n|
-          n[:klazz].supervise_as n[:id], n[:id], n[:value], Celluloid::Actor[:postoffice], n[:outedges]
+        # we are going to assume that graphs come in as json documents
+        # *describing* the graph.
+        # @vertices = graph
+        # @active   = graph.size
+        @vertices2 = []
+        g.each do |n|
+          # n[:klazz].supervise_as n[:id], n[:id], n[:value], Celluloid::Actor[:postoffice], n[:outedges]
           @vertices << n[:id]
-         end
-         @active = @vertices.size
+          v = n[:klazz].new n[:id], n[:value], Celluloid::Actor[:postoffice], n[:outedges]
+          @vertices2 << v
+        end
+        @active = @vertices.size
 
-         debug "There are #{@vertices.size} vertices in this worker."
+        debug "There are #{@vertices.size} vertices in this worker."
 
       end
 
       # HACK this should be handled better...
       def init_superstep
         # need to delivery all messages here first, to avoid race conditions
-        @vertices.each do |v|
-          vertex = Celluloid::Actor[v]
-          # v.messages = PostOffice.instance.read(v.id)
-          vertex.messages = Celluloid::Actor[:postoffice].read_all(vertex.id)
-          vertex.active! if vertex.messages.size > 0
+        # @vertices.each do |v|
+        #   vertex = Celluloid::Actor[v]
+        #   # v.messages = PostOffice.instance.read(v.id)
+        #   vertex.messages = Celluloid::Actor[:postoffice].read_all(vertex.id)
+        #   vertex.active! if vertex.messages.size > 0
+        # end
+
+        @vertices2.each do |v|
+          v.messages = Celluloid::Actor[:postoffice].read_all(v.id)
         end
+        debug "#{DCell.me.id} finished init_superstep"
       end
 
       def superstep
@@ -75,14 +82,27 @@ module Elaine
         #   vertex.active! if vertex.messages.size > 0
         # end
 
-        active = @vertices.select {|v| Celluloid::Actor[v].active?}
+        # active = @vertices.select {|v| Celluloid::Actor[v].active?}
+        active = @vertices2.select {|v| v.active?}
 
-        futures = active.map { |v| Celluloid::Actor[v].future(:step) }
-        futures.map { |f| f.value }
-        # active.each {|v| Celluloid::Actor[v].step}
+        # futures = active.map { |v| Celluloid::Actor[v].future(:step) }
+        # futures.map { |f| f.value }
+        active.each {|v| v.step}
 
-        @active = active.select {|v| Celluloid::Actor[v].active?}.size
+
+        # @active = active.select {|v| Celluloid::Actor[v].active?}.size
+        @active = active.select {|v| v.active?}.size
         
+      end
+
+      # def each_vertex_value(&block)
+      #   @vertices2.each do |v|
+      #     yield v.value.class
+      #   end
+      # end
+
+      def vertex_values
+        @vertices2.map { |v| v.value }
       end
     end # class Worker
   end # module Distributed

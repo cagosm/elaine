@@ -20,6 +20,13 @@ module Elaine
         # do we need to initialize all the mailboxes here?
         # might be smart?
         @mailboxes = Hash.new
+        my_id = DCell.me.id
+        @zipcodes.each_pair do |k, v|
+          if v == my_id
+            debug "Creating mailbox for: #{k}"
+            @mailboxes[k] = []
+          end
+        end
 
       end
 
@@ -36,18 +43,22 @@ module Elaine
         node = address(to)
 
         if node.id.eql?(DCell.me.id)
-          @mailboxes[to] ||= []
-          @mailboxes[to] << msg
+          # debug "Delivering message to local mailbox: #{msg}"
+          # @mailboxes[to] ||= []
+          # debug "Mailboxes.size: #{@mailboxes.size}"
+          # debug "Delivering to mailbox: #{to}"
+          @mailboxes[to].push msg
         else
-
-          remote_post_office = node[:postoffice]
-          remote_post_office.deliver(to, msg)
+          # debug "Delivering message to remote mailbox: #{msg}"
+          #DCell::Node[@zipcoes[to][:postoffice].deliver(to, msg)
+          remote_post_office = node[:postoffice].deliver(to, msg)
+          # remote_post_office.
         end
       end
 
       def read(mailbox)
         node = address(mailbox)
-        if node.eql?(Dcell.me.id)
+        if node.id.eql?(Dcell.me.id)
           @mailboxes[mailbox]
         else
           node[:postoffice].read mailbox
@@ -60,7 +71,10 @@ module Elaine
         # debug "node.id: '#{node.id}'"
         # debug "DCell.me.id: '#{DCell.me.id}'"
         if node.id.eql?(DCell.me.id)
-          @mailboxes.delete(mailbox) || []
+          # @mailboxes.delete(mailbox) || []
+          msgs = @mailboxes[mailbox].map { |v| v }
+          @mailboxes[mailbox].clear
+          msgs
         else
           raise "Can't destructively read a non-local mailbox!"
         end
