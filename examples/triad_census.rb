@@ -1,5 +1,10 @@
 require 'dcell'
 
+# CORRECT ANSWER FOR erdos-renyi-N_1000-E_0.2.egonets
+# 0: 85449930
+# 1: 63619591
+# 2: 15793662
+# 3: 1303817
 
 
 load File.expand_path("./triad_census_vertex.rb")
