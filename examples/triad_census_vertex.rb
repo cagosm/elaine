@@ -47,8 +47,8 @@ class TriadCensusVertex < Elaine::Distributed::Vertex
         # raise "Got an out-of-step message! current superstep: #{superstep}, message from superstep: #{msg[:superstep]}" if msg[:superstep] != (superstep - 1)  
         v = msg[:source].to_s.split("_")[1].to_i
         if u < v
-          type2s = (@outedges | msg[:neighborhood]).select { |neighbor| to_s.split("_")[1].to_i < v }
-          type3s = (@outedges & msg[:neighborhood]).select { |neighbor| to_s.split("_")[1].to_i < v }
+          type2s = (@outedges | msg[:neighborhood]).select { |neighbor| v < to_s.split("_")[1].to_i }
+          type3s = (@outedges & msg[:neighborhood]).select { |neighbor| v < to_s.split("_")[1].to_i }
           @value[:type2] += type2s.size
           @value[:type3] += type3s.size
           @value[:type1_local] += type2s.size - type3s.size
