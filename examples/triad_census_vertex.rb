@@ -39,7 +39,7 @@ class TriadCensusVertex < Elaine::Distributed::Vertex
       logger.info "Super step 2: #{id}"
       # sum = messages.inject(0) {|total,msg| total += msg; total }
       # sum = messages.reduce(0, :+)
-      @value = {:type1_local: 0, type2: 0, type3: 0}
+      @value = {type1_local: 0, type2: 0, type3: 0}
 
       u = id.to_s.split("_")[1].to_i 
       messages.each do |msg|
