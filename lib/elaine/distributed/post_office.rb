@@ -43,24 +43,21 @@ module Elaine
         node = address(to)
 
         if node.id.eql?(DCell.me.id)
-          # debug "Delivering message to local mailbox: #{msg}"
-          # @mailboxes[to] ||= []
-          # debug "Mailboxes.size: #{@mailboxes.size}"
-          debug "Delivering to mailbox: #{to}"
+          # debug "Delivering to mailbox: #{to}"
           @mailboxes[to].push msg
-          debug "Done delivering to mailbox: #{to}"
+          # debug "Done delivering to mailbox: #{to}"
           nil
         else
           # debug "Delivering message to remote mailbox: #{msg}"
           #DCell::Node[@zipcoes[to][:postoffice].deliver(to, msg)
-          debug "Delivering to remote box: #{node.id}"
+          # debug "Delivering to remote box: #{node.id}"
           # msg.freeze
           # future = node[:postoffice].future.deliver(to, msg)
           # future.value
 
           node[:postoffice].async.deliver(to, msg)
-          debug "Finished delivery remnote box: to #{node.id}"
-          "whatevz"
+          # debug "Finished delivery remnote box: to #{node.id}"
+          nil
           # remote_post_office.
         end
       end
