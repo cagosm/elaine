@@ -42,7 +42,7 @@ out_val = { type1: 0, type2: 0, type3: 0 }
 vertex_values = coordinator_node[:coordinator].vertex_values
 vertex_values.each do |v|
   out_val[:type2] += v[:value][:type2]
-  out_val[:type2] += v[:value][:type3]
+  out_val[:type3] += v[:value][:type3]
   out_val[:type1] += (n - (v[:value][:type2] + v[:value][:type3]))
   # out_val[:type2] += v[:type2]
   # out_val[:type3] += v[:type3]
