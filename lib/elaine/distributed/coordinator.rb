@@ -140,6 +140,8 @@ module Elaine
         @workers.map do |w|
           worker_node = DCell::Node[w]
           worker_node[:worker].vertex_values
+          # puts "ret.class: #{ret.class}, size: #{ret.size}, ret: #{ret}"
+          # ret
         end.flatten
       end
 

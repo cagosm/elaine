@@ -20,9 +20,9 @@ module Elaine
         @coordinator_node = coordinator_node
         DCell::Node[@coordinator_node][:coordinator].register_worker DCell.me.id
 
-        Elaine::Distributed::PostOffice.supervise_as :postoffice
+        # Elaine::Distributed::PostOffice.supervise_as :postoffice
         # this could/should probably be done in the constructor
-        Celluloid::Actor[:postoffice].zipcodes = zipcodes
+        # Celluloid::Actor[:postoffice].zipcodes = zipcodes
         @vertices = []
         @superstep_num = 0
         # self.init_graph(g)
@@ -71,6 +71,11 @@ module Elaine
         debug "#{DCell.me.id} finished init_superstep"
       end
 
+      def pmap(enum, &block)
+        futures = enum.map { |elem| Celluloid::Future.new(elem, &block) }
+        futures.map { |future| future.value }
+      end
+
       def superstep
         # Thread.new do
         # @superstep_num += 1
@@ -87,7 +92,10 @@ module Elaine
 
         # futures = active.map { |v| Celluloid::Actor[v].future(:step) }
         # futures.map { |f| f.value }
-        active.each {|v| v.step}
+        # active.each {|v| v.step}
+        pmap(active) do |v|
+          v.step
+        end
 
 
         # @active = active.select {|v| Celluloid::Actor[v].active?}.size
@@ -102,7 +110,7 @@ module Elaine
       # end
 
       def vertex_values
-        @vertices2.map { |v| v.value }
+        @vertices2.map { |v| {id: v.id, value: v.value} }
       end
     end # class Worker
   end # module Distributed

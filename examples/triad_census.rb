@@ -1,5 +1,7 @@
 require 'dcell'
 
+
+
 load File.expand_path("./triad_census_vertex.rb")
 
 DCell.setup
@@ -34,12 +36,19 @@ coordinator_node[:coordinator].run_job
 
 # zipcodes = coordinator_node[:coordinator].zipcodes
 
-out_val = { type2: 0, type3: 0 }
+n = graph.size
 
-coordinator_node[:coordinator].vertex_values.each do |v|
-  out_val[:type2] += v[:type2]
-  out_val[:type3] += v[:type3]
+out_val = { type1: 0, type2: 0, type3: 0 }
+vertex_values = coordinator_node[:coordinator].vertex_values
+vertex_values.each do |v|
+  out_val[:type2] += v[:value][:type2]
+  out_val[:type2] += v[:value][:type3]
+  out_val[:type1] += (n - (v[:value][:type2] + v[:value][:type3]))
+  # out_val[:type2] += v[:type2]
+  # out_val[:type3] += v[:type3]
 end
+
+out_val[:type0] = (1 / 6.0) * n * (n - 1) * (n - 2) - (out_val[:type1] + out_val[:type2] + out_val[:type3])
 
 puts "*"*20
 puts "Results:"

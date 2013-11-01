@@ -116,12 +116,16 @@ describe Elaine::Distributed::Coordinator do
     DCell::Node["test.elaine.coordinator"][:coordinator].graph = graph
     DCell::Node["test.elaine.coordinator"][:coordinator].partition
     DCell::Node["test.elaine.coordinator"][:coordinator].run_job
-
-    DCell::Node["test.elaine.coordinator"][:coordinator].workers.each do |w|
-      DCell::Node[w][:worker].vertices.each do |v|
-        DCell::Node[w][v].value.should == 5
-      end
+    values = DCell::Node["test.elaine.coordinator"][:coordinator].vertex_values
+    values.each do |v|
+      v[:value].should == 5
     end
+
+    # DCell::Node["test.elaine.coordinator"][:coordinator].workers.each do |w|
+    #   DCell::Node[w][:worker].vertices.each do |v|
+    #     DCell::Node[w][v].value.should == 5
+    #   end
+    # end
   end
 
   it "should calculate PageRank of a circular graph" do
@@ -150,11 +154,16 @@ describe Elaine::Distributed::Coordinator do
     DCell::Node["test.elaine.coordinator"][:coordinator].partition
     DCell::Node["test.elaine.coordinator"][:coordinator].run_job
 
-    DCell::Node["test.elaine.coordinator"][:coordinator].workers.each do |w|
-      DCell::Node[w][:worker].vertices.each do |v|
-        (DCell::Node[w][v].value * 100).to_i.should == 33
-      end
+    values = DCell::Node["test.elaine.coordinator"][:coordinator].vertex_values
+    values.each do |v|
+      (v[:value] * 100).to_i.should == 33
     end
+
+    # DCell::Node["test.elaine.coordinator"][:coordinator].workers.each do |w|
+    #   DCell::Node[w][:worker].vertices.each do |v|
+    #     (DCell::Node[w][v].value * 100).to_i.should == 33
+    #   end
+    # end
   end
   
 
@@ -188,11 +197,22 @@ describe Elaine::Distributed::Coordinator do
     DCell::Node["test.elaine.coordinator"][:coordinator].partition
     DCell::Node["test.elaine.coordinator"][:coordinator].run_job
 
-    zipcodes = DCell::Node["test.elaine.coordinator"][:coordinator].zipcodes
+    vertex_values = DCell::Node["test.elaine.coordinator"][:coordinator].vertex_values
+    vertex_values.each do |v|
+      if v[:id] == :igvita
+        (v[:value] * 100).ceil.to_i.should == 19
+      elsif v[:id] == :wikipedia
+        (v[:value] * 100).ceil.to_i.should == 13
+      elsif v[:id] == :google
+        (v[:value] * 100).to_i.should == 68
+      else
+        fail "Unexpected node id: #{v[:id]}"
+      end
+    end
 
-    (DCell::Node[zipcodes[:igvita]][:igvita].value * 100).ceil.to_i.should == 19
-    (DCell::Node[zipcodes[:wikipedia]][:wikipedia].value * 100).ceil.to_i.should == 13
-    (DCell::Node[zipcodes[:google]][:google].value * 100).to_i.should == 68
+    # (DCell::Node[zipcodes[:igvita]][:igvita].value * 100).ceil.to_i.should == 19
+    # (DCell::Node[zipcodes[:wikipedia]][:wikipedia].value * 100).ceil.to_i.should == 13
+    # (DCell::Node[zipcodes[:google]][:google].value * 100).to_i.should == 68
     
   end
 
