@@ -39,7 +39,7 @@ class TriadCensusVertex < Elaine::Distributed::Vertex
       logger.info "Super step 2: #{id}"
       # sum = messages.inject(0) {|total,msg| total += msg; total }
       # sum = messages.reduce(0, :+)
-      @value = {type2: 0, type3: 0 }
+      @value = {:type1_local: 0, type2: 0, type3: 0}
 
       u = id.to_s.split("_")[1].to_i 
       messages.each do |msg|
@@ -47,20 +47,28 @@ class TriadCensusVertex < Elaine::Distributed::Vertex
         # raise "Got an out-of-step message! current superstep: #{superstep}, message from superstep: #{msg[:superstep]}" if msg[:superstep] != (superstep - 1)  
         v = msg[:source].to_s.split("_")[1].to_i
         if u < v
-          
-          msg[:neighborhood].each do |node_w|
-            w = node_w.to_s.split("_")[1].to_i
-            if u < w && v < w
-              num_edges = 2
-              if @outedges.include? node_w
-                num_edges += 1
-              end
+          type2s = (@outedges | msg[:neighborhood]).select { |neighbor| to_s.split("_")[1].to_i < v }
+          type3s = (@outedges & msg[:neighborhood]).select { |neighbor| to_s.split("_")[1].to_i < v }
+          @value[:type2] += type2s.size
+          @value[:type3] += type3s.size
+          @value[:type1_local] += type2s.size - type3s.size
 
-              @value[:type2] += 1 if num_edges == 2
-              @value[:type3] += 1 if num_edges == 3 
 
-            end
-          end
+
+          # msg[]
+          # msg[:neighborhood].each do |node_w|
+          #   w = node_w.to_s.split("_")[1].to_i
+          #   if u < w && v < w
+          #     num_edges = 2
+          #     if @outedges.include? node_w
+          #       num_edges += 1
+          #     end
+
+          #     @value[:type2] += 1 if num_edges == 2
+          #     @value[:type3] += 1 if num_edges == 3 
+
+          #   end
+          # end
         end
       end
     
