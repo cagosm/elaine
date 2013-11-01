@@ -50,7 +50,7 @@ class TriadCensusVertex < Elaine::Distributed::Vertex
           
           msg[:neighborhood].each do |node_w|
             w = node_w.to_s.split("_")[1].to_i
-            if v < w
+            if u < w && v < w
               num_edges = 2
               if @outedges.include? node_w
                 num_edges += 1
