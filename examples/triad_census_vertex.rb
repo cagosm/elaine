@@ -50,9 +50,11 @@ class TriadCensusVertex < Elaine::Distributed::Vertex
           type3s = (@outedges & msg[:neighborhood]).select { |neighbor| v < neighbor.to_s.split("_")[1].to_i }
           @value[:type3] += type3s.size
           
-          # possible_type2s = (@outedges | msg[:neighborhood]).select { |neighbor| u < neighbor.to_s.split("_")[1].to_i }
-          possible_type2s = (@outedges | msg[:neighborhood])
-          @value[:type2] += possible_type2s.size - type3s.size
+          possible_type2s = (@outedges | msg[:neighborhood]).select { |neighbor| u < neighbor.to_s.split("_")[1].to_i }
+
+          @value[:type2] += (possible_type2s - (@outedges & msg[:neighborhood])).size - 1 # - type3s.size
+          # possible_type2s = (@outedges | msg[:neighborhood])
+          # @value[:type2] += possible_type2s.size - type3s.size
           # type2s = (@outedges | msg[:neighborhood])
           # @value[:type2] += type2s.size - 2
 

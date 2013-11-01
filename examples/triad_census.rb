@@ -48,7 +48,9 @@ total_triads_possible = ((1 / 6.0) * n * (n - 1) * (n - 2)).to_i
 out_val = { type0: 0, type1: 0, type2: 0, type3: 0 }
 vertex_values = coordinator_node[:coordinator].vertex_values
 vertex_values.each do |v|
-  out_val[:type2] += v[:value][:type2]
+  puts "node #{v[:id]} reports #{v[:value][:type2]} type 2 triads"
+  puts "node #{v[:id]} reports #{v[:value][:type3]} type 3 triads"
+  out_val[:type2] += (v[:value][:type2] / 2.0).ceil.to_i
   out_val[:type3] += v[:value][:type3]
   if (n < (v[:value][:type1_local]))
     puts "node #{v[:id]} reporting more type1 local involvement than possible! (#{v[:value][:type1_local]})"
