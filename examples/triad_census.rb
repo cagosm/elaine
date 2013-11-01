@@ -46,7 +46,7 @@ vertex_values.each do |v|
   out_val[:type2] += v[:value][:type2]
   out_val[:type3] += v[:value][:type3]
   if (n < (v[:value][:type2] + v[:value][:type3]))
-    puts "node #{v[:id] reporting more triads involvement than possible!}"
+    puts "node #{v[:id]} reporting more triads involvement than possible!"
 
   end
   out_val[:type1] += (n - (v[:value][:type2] + v[:value][:type3]))
