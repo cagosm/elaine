@@ -60,7 +60,7 @@ class TriadCensusVertex < Elaine::Distributed::Vertex
           possible_type2s.each do |w|
             if @outedges.include? w
               # i am the pivot
-              @value[:type2] += 1 if sym_id_to_i(w) < v
+              @value[:type2] += 1 if v < sym_id_to_i(w)
             else
               # i am not the pivot.
               @value[:type2] += 1
