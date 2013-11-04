@@ -49,8 +49,8 @@ total_dyads_possible = ((1 / 2) * n * (n - 1)).to_i
 out_val = { type0: 0, type1: 0, type2: 0, type3: 0 }
 vertex_values = coordinator_node[:coordinator].vertex_values
 vertex_values.each do |v|
-  puts "node #{v[:id]} reports #{v[:value][:type2]} type 2 triads"
-  puts "node #{v[:id]} reports #{v[:value][:type3]} type 3 triads"
+  # puts "node #{v[:id]} reports #{v[:value][:type2]} type 2 triads"
+  # puts "node #{v[:id]} reports #{v[:value][:type3]} type 3 triads"
   out_val[:type2] += v[:value][:type2]
   out_val[:type3] += v[:value][:type3]
   # if (total_dyads_possible < (v[:value][:type1_local]))
