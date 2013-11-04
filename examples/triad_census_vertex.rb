@@ -10,6 +10,10 @@ class TriadCensusVertex < Elaine::Distributed::Vertex
     @logger ||= Logger.new(STDERR)
   end
 
+  def sym_id_to_i(sym_id)
+    sym_id.to_s.split("_")[1].to_i
+  end
+
   def compute
     # puts "Working on supserstep: #{superstep}"
     if superstep == 1
@@ -50,9 +54,29 @@ class TriadCensusVertex < Elaine::Distributed::Vertex
           type3s = (@outedges & msg[:neighborhood]).select { |neighbor| v < neighbor.to_s.split("_")[1].to_i }
           @value[:type3] += type3s.size
           
-          possible_type2s = (@outedges | msg[:neighborhood]).select { |neighbor| u < neighbor.to_s.split("_")[1].to_i }
+          possible_type2s = (@outedges | msg[:neighborhood]).select { |neighbor| u < sym_id_to_i(neighbor) && sym_id_to_i(neighbor) != v }
+          possible_type2s = possible_type2s - type3s
 
-          @value[:type2] += (possible_type2s - (@outedges & msg[:neighborhood])).size - 1 # - type3s.size
+          possible_type2s.each do |w|
+            if @outedges.include? w
+              # i am the pivot
+              @value[:type2] += 1 if sym_id_to_i(w) < v
+            else
+              # i am not the pivot.
+              @value[:type2] += 1
+            end
+          end
+
+          
+          # mine = (@outedges - type3s).select { |neighbor| u < neighbor.to_s.split("_")[1].to_i }
+          # theirs = msg[:neighborhood] - type3s
+          # theirs.each do |neighbor|
+          #   # we need to figure out if this is the pivot node in the configuration
+
+
+          # end
+
+          # @value[:type2] += (possible_type2s - (@outedges & msg[:neighborhood])).size - 1 # - type3s.size
           # possible_type2s = (@outedges | msg[:neighborhood])
           # @value[:type2] += possible_type2s.size - type3s.size
           # type2s = (@outedges | msg[:neighborhood])
