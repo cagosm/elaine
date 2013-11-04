@@ -16,7 +16,8 @@ graph_to_load = ARGV[0]
 
 graph = []
 
-File.open(graph_to_load).lines do |line|
+start_load = Time.now.to_i
+File.open(graph_to_load).each_line do |line|
   a = line.strip.split
 
   vertex = {}
@@ -28,16 +29,20 @@ File.open(graph_to_load).lines do |line|
 
   graph << vertex
 end
+end_load = Time.now.to_i
 
 puts "There are #{graph.size} nodes"
 
 puts "Loading graph into coordinator node"
-
+start_remote_load = Time.now.to_i
 coordinator_node = DCell::Node["triad.census.elaine.coordinator"]
 coordinator_node[:coordinator].graph = graph
+end_remote_load = Time.now.to_i
 
 puts "Running job"
+start_job = Time.now.to_i
 coordinator_node[:coordinator].run_job
+end_job = Time.now.to_i
 
 # zipcodes = coordinator_node[:coordinator].zipcodes
 
@@ -60,7 +65,7 @@ vertex_values.each do |v|
   if v[:value][:type1_local] < 0
     if v[:value][:type1_local].abs > n
       puts "node #{v[:id]} reporting more type 1 local involvement than possible!"
-      out_val[:type1] += (n - v[:value][:type1_local])
+      out_val[:type1] += (n - v[:value][:type1_local].abs)
     end
   end
   
@@ -71,10 +76,16 @@ end
 
 out_val[:type0] =  total_triads_possible - (out_val[:type1] + out_val[:type2] + out_val[:type3])
 
-puts "*"*20
+puts "="*20
 puts "Results:"
 puts out_val
-puts "*"*20
+puts "="*20
 
+puts "*"*20
+puts "Run times:"
+puts "Local graph load: #{end_load - start_load}"
+puts "Remote graph load: #{end_remote_load - start_remote_load}"
+puts "Job: #{end_job - start_job}"
+puts "*"*20
 
 
