@@ -48,7 +48,7 @@ module Elaine
 
       def partition
         # not sure if we should re-initialize or not
-        # @partitions = Hash.new
+        @partitions = Hash.new
 
         # size = (graph.size.to_f / num_partitions).ceil
         size = (@graph.size.to_f / workers.size).ceil
