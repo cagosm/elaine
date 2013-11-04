@@ -82,7 +82,7 @@ class TriadCensusVertex < Elaine::Distributed::Vertex
           # type2s = (@outedges | msg[:neighborhood])
           # @value[:type2] += type2s.size - 2
 
-          @value[:type1_local] += possible_type2s.size - type3s.size
+          @value[:type1_local] -= (@oudges | msg[:neighborhood]).size - 2
 
 
 
