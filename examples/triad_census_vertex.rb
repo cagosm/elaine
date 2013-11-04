@@ -43,13 +43,11 @@ class TriadCensusVertex < Elaine::Distributed::Vertex
       logger.info "Super step 2: #{id}"
       # sum = messages.inject(0) {|total,msg| total += msg; total }
       # sum = messages.reduce(0, :+)
-      @value = {type1_local: 0, type2: 0, type3: 0}
-
       u = id.to_s.split("_")[1].to_i 
       messages.each do |msg|
         # msg = JSON.parse(msg_json, symbolize_names: true)
         # raise "Got an out-of-step message! current superstep: #{superstep}, message from superstep: #{msg[:superstep]}" if msg[:superstep] != (superstep - 1)  
-        v = msg[:source].to_s.split("_")[1].to_i
+        v = sym_id_to_i msg[:source]
         if u < v
           type3s = (@outedges & msg[:neighborhood]).select { |neighbor| v < neighbor.to_s.split("_")[1].to_i }
           @value[:type3] += type3s.size
@@ -67,6 +65,8 @@ class TriadCensusVertex < Elaine::Distributed::Vertex
             end
           end
 
+
+
           
           # mine = (@outedges - type3s).select { |neighbor| u < neighbor.to_s.split("_")[1].to_i }
           # theirs = msg[:neighborhood] - type3s
@@ -83,6 +83,7 @@ class TriadCensusVertex < Elaine::Distributed::Vertex
           # @value[:type2] += type2s.size - 2
 
           @value[:type1_local] -= (@outedges | msg[:neighborhood]).size - 2
+          @value[:type1_test] += @value[:n] - (@outedges | msg[:neighborhood]).size - 2)
 
 
 

@@ -25,9 +25,12 @@ File.open(graph_to_load).each_line do |line|
   vertex[:id] = "n_#{a.shift}".to_sym
   vertex[:klazz] = TriadCensusVertex
   vertex[:outedges] = a.map { |v| "n_#{v}".to_sym}
-  vertex[:value] = {}
+  vertex[:value] = {type0: 0, type1: 0, type2: 0, type3: 0, type1_local: 0, n: 0, type1_test: 0}
 
   graph << vertex
+end
+graph.each do |v|
+  v[:value][:n] = graph.size
 end
 end_load = Time.now.to_i
 
@@ -51,7 +54,7 @@ n = graph.size
 total_triads_possible = ((1 / 6.0) * n * (n - 1) * (n - 2)).to_i
 total_dyads_possible = ((1 / 2) * n * (n - 1)).to_i
 
-out_val = { type0: 0, type1: 0, type2: 0, type3: 0 }
+out_val = { type0: 0, type1: 0, type2: 0, type3: 0, type1_test: 0 }
 vertex_values = coordinator_node[:coordinator].vertex_values
 vertex_values.each do |v|
   # puts "node #{v[:id]} reports #{v[:value][:type2]} type 2 triads"
@@ -64,10 +67,11 @@ vertex_values.each do |v|
 
   if v[:value][:type1_local] < 0
     if v[:value][:type1_local].abs > n
-      puts "node #{v[:id]} reporting more type 1 local involvement than possible!"
-      out_val[:type1] += (n - v[:value][:type1_local].abs)
+      puts "node #{v[:id]} reporting more type 1 local involvement than possible! #{v[:value][:type1_local]}"
     end
+    out_val[:type1] += (n - v[:value][:type1_local].abs)
   end
+  out_val[:type1_test] += v[:value][:type1_test]
   
   # out_val[:type1] += (n - (v[:value][:type2] + v[:value][:type3]))
   # out_val[:type2] += v[:type2]
