@@ -31,9 +31,6 @@ module Elaine
       end
 
       def address(to)
-        # debug "There are: #{zipcodes.size} zipcodes"
-        # debug "Looking up address for #{to}"
-        # debug "Post office for #{to} is #{@zipcodes[to]}"
         node = DCell::Node[@zipcodes[to]]
       end
 
@@ -49,16 +46,9 @@ module Elaine
           nil
         else
           # debug "Delivering message to remote mailbox: #{msg}"
-          #DCell::Node[@zipcoes[to][:postoffice].deliver(to, msg)
-          # debug "Delivering to remote box: #{node.id}"
-          # msg.freeze
-          # future = node[:postoffice].future.deliver(to, msg)
-          # future.value
-
           node[:postoffice].async.deliver(to, msg)
           # debug "Finished delivery remnote box: to #{node.id}"
           nil
-          # remote_post_office.
         end
       end
 
@@ -77,7 +67,6 @@ module Elaine
         # debug "node.id: '#{node.id}'"
         # debug "DCell.me.id: '#{DCell.me.id}'"
         if node.id.eql?(DCell.me.id)
-          # @mailboxes.delete(mailbox) || []
           msgs = @mailboxes[mailbox].map { |v| v }
           @mailboxes[mailbox].clear
           msgs
