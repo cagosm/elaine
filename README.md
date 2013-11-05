@@ -30,11 +30,8 @@ All compute nodes must be brought up manuallly, this includes workers and coordi
 Related to the above, right now, the compute nodes *must* know about the vertex program's class before they are started. This means loading the vertex program in a scope outside of the actual coordinator/workers. As of now, this means you are required to create a separate script that requires the necessary vertex program to start up the coordinator and worker. This is not ideal. I'm hoping to solve it by having the end user supply a packaged gem, and then unpacking it and loading it dynamically.
 
 
-# Caveats
 
-There are several caveats. As mentioned above, there is no fault tolerance in the system now. Additionally, all compute nodes must be brought up manually, and must have 
-
-
+# Pregel
 
 To learn more about Pregel see following resources:
 
