@@ -12,11 +12,7 @@ module Elaine
       attr_reader :workers
       attr_reader :partitions
       attr_reader :num_partitions
-      # attr_reader :graph
-      # attr_reader :zipcodes
 
-      # attr_reader :server
-      # def initialize(host, port, graph: nil, partitions: 1)
       def initialize(graph: nil, num_partitions: 1)
         @workers = []
         @num_partitions = num_partitions
@@ -24,10 +20,6 @@ module Elaine
         info "GOT GRAPH: #{graph}"
         @partitions = Hash.new
 
-      end
-
-      def fart
-        puts "FART"
       end
 
       def graph=(g)
@@ -50,13 +42,7 @@ module Elaine
         # not sure if we should re-initialize or not
         @partitions = Hash.new
 
-        # size = (graph.size.to_f / num_partitions).ceil
         size = (@graph.size.to_f / workers.size).ceil
-        # graph.each_slice(size).with_index do |slice, index|
-        #   slice.each do |vertex_json|
-        #     zipcodes[vertex_json[:id]] = workers[index]
-        #   end
-        # end
 
         @graph.each_slice(size).with_index do |slice, index|
           @partitions[@workers[index]] = slice
@@ -115,33 +101,15 @@ module Elaine
 
           step.map { |f| f.value }
 
-          # @workers.select { |w| DCell::Node[w][:worker].active > 0 }.each do |w|
-          #   DCell::Node[w][:worker].superstep
-          # end
-
-
-
           break if @workers.select { |w| DCell::Node[w][:worker].active > 0 }.size.zero?
         end
         debug "Job finished!"
       end
 
-      # def each_vertex(&block)
-      #   @workers.each do |w|
-      #     worker_node = DCell::Node[w]
-      #     worker_node[:worker].vertices2.each do |v|
-      #       # yield worker_node[v]
-      #       yield v
-      #     end
-      #   end
-      # end
-
       def vertex_values(&block)
         @workers.map do |w|
           worker_node = DCell::Node[w]
           worker_node[:worker].vertex_values
-          # puts "ret.class: #{ret.class}, size: #{ret.size}, ret: #{ret}"
-          # ret
         end.flatten
       end
 
