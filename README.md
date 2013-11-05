@@ -61,8 +61,8 @@ end
 
 The above algorithm will run for 30 iterations, at which point all vertices will mark themselves as inactive and the coordinator will terminate our computation.
 
- * [Computing PageRank for a simple circular graph](https://github.com/igrigorik/pregel/blob/master/spec/coordinator_spec.rb#L52)
- * [Computing PageRank for a more complex grap](https://github.com/igrigorik/pregel/blob/master/spec/coordinator_spec.rb#L70)
+ * [Computing PageRank for a simple circular graph](https://github.com/worst/elaine/blob/master/spec/coordinator_spec.rb#L52)
+ * [Computing PageRank for a more complex grap](https://github.com/worst/elaine/blob/master/spec/coordinator_spec.rb#L70)
 
 # License
 
