@@ -68,7 +68,7 @@ The above algorithm will run for 30 iterations, at which point all vertices will
 
 (The MIT License)
 
-Copyright (c) 2010 Ilya Grigorik
+Copyright (c) 2010 Jeremy Blackburn
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
