@@ -28,9 +28,6 @@ module Elaine
       end
 
       def deliver(to, msg)
-        # PostOffice.instance.deliver(to, msg)
-        # @postoffice.deliver(to, msg)
-
        @postoffice.deliver(to, msg)
       end
 
