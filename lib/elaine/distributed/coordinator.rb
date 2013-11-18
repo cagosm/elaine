@@ -13,12 +13,13 @@ module Elaine
       attr_reader :partitions
       attr_reader :num_partitions
 
-      def initialize(graph: nil, num_partitions: 1)
+      def initialize(graph: nil, num_partitions: 1. stop_condition: Celluloid::Condition.new)
         @workers = []
         @num_partitions = num_partitions
         @graph = graph
         info "GOT GRAPH: #{graph}"
         @partitions = Hash.new
+        @stop_condition = stop_condition
 
       end
 
@@ -62,7 +63,7 @@ module Elaine
         end
       end
 
-      def run_job
+      def run_until_finished
         # zipcodes = {}
         debug "partitioning"
         partition
@@ -104,6 +105,20 @@ module Elaine
           break if @workers.select { |w| DCell::Node[w][:worker].active > 0 }.size.zero?
         end
         debug "Job finished!"
+      end
+
+      def run_job
+        run_until_finished
+      end
+
+      def stop
+        @stop_condition.signal(true)
+      end
+
+      def run_and_stop
+        run_until_finished
+        @stop_condition.signal(true)
+        
       end
 
       def vertex_values(&block)
