@@ -9,7 +9,7 @@ module Elaine
       attr_reader :vertices, :active, :vertices2
 
 
-      def initialize(coordinator_node: "elaine.coordinator", g: [], zipcodes: {})
+      def initialize(coordinator_node: "elaine.coordinator", g: [], zipcodes: {}, stop_condition: Celluloid::Condition.new)
 
         # @coordinator_node = DCell::Node["elaine.coordinator"]
         @coordinator_node = coordinator_node
@@ -17,6 +17,7 @@ module Elaine
 
         @vertices = []
         @superstep_num = 0
+        @stop_condition = stop_condition
       end
 
       def init_graph(g=[])
@@ -60,6 +61,10 @@ module Elaine
       def pmap(enum, &block)
         futures = enum.map { |elem| Celluloid::Future.new(elem, &block) }
         futures.map { |future| future.value }
+      end
+
+      def stop
+        @stop_condition.signal(true)
       end
 
       def superstep

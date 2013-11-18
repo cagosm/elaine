@@ -20,7 +20,6 @@ module Elaine
         info "GOT GRAPH: #{graph}"
         @partitions = Hash.new
         @stop_condition = stop_condition
-
       end
 
       def graph=(g)
