@@ -13,7 +13,7 @@ module Elaine
       attr_reader :partitions
       attr_reader :num_partitions
 
-      def initialize(graph: nil, num_partitions: 1. stop_condition: Celluloid::Condition.new)
+      def initialize(graph: nil, num_partitions: 1, stop_condition: Celluloid::Condition.new)
         @workers = []
         @num_partitions = num_partitions
         @graph = graph
@@ -117,7 +117,6 @@ module Elaine
       def run_and_stop
         run_until_finished
         @stop_condition.signal(true)
-        
       end
 
       def vertex_values(&block)
