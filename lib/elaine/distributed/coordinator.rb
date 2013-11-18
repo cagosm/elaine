@@ -111,6 +111,9 @@ module Elaine
       end
 
       def stop
+        @workers.each do |w|
+          DCell::Node[w][:worker].stop
+        end
         @stop_condition.signal(true)
       end
 
