@@ -112,7 +112,7 @@ module Elaine
 
       def stop
         @workers.each do |w|
-          DCell::Node[w][:worker].stop
+          DCell::Node[w][:worker].async.stop
         end
         @stop_condition.signal(true)
       end
