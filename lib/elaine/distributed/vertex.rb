@@ -28,7 +28,7 @@ module Elaine
       end
 
       def deliver(to, msg)
-       @postoffice.deliver(to, msg)
+       @postoffice.async.deliver(to, msg)
       end
 
       def step
