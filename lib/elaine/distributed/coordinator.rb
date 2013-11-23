@@ -66,7 +66,7 @@ module Elaine
         # zipcodes = {}
         debug "partitioning"
         partition
-        debug "Partitions: #{@partitions}"
+        # debug "Partitions: #{@partitions}"
 
         # distribute the zipcodes
         debug "building zipcodes"
