@@ -90,6 +90,7 @@ module Elaine
           # execute a superstep and wait for workers to complete
           debug "Initializing superstep #{step_num}"
           step = @workers.select do |w|
+            debug "Checking for active vertices on node #{w}"
             DCell::Node[w][:worker].active > 0
           end.map {|w| DCell::Node[w][:worker].future(:init_superstep)}
           step.map { |f| f.value }
