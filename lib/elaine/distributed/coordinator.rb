@@ -53,8 +53,8 @@ module Elaine
 
         @graph.each_with_index do |v, idx|
           worker_node = idx % @workers.size
-          @partitions[@workers[idx]] ||= []
-          @partitions[@workers[idx]] << v
+          @partitions[@workers[worker_node]] ||= []
+          @partitions[@workers[worker_node]] << v
         end
 
         debug "done running slow partitioner:"
