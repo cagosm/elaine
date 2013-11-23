@@ -42,10 +42,24 @@ module Elaine
         # not sure if we should re-initialize or not
         @partitions = Hash.new
 
-        size = (@graph.size.to_f / workers.size).ceil
+        # size = (@graph.size.to_f / workers.size).ceil
 
-        @graph.each_slice(size).with_index do |slice, index|
-          @partitions[@workers[index]] = slice
+        # @graph.each_slice(size).with_index do |slice, index|
+        #   @partitions[@workers[index]] = slice
+        # end
+
+        # trying a slow partitioning to check a bug...
+        debug "running slow partitioner..."
+
+        @graph.each_with_index do |v, idx|
+          worker_node = idx % @workers.size
+          @partitions[@workers[index]] ||= []
+          @partitions[@workers[index]] << v
+        end
+        
+        debug "done running slow partitioner:"
+        @partitions.each_pair do |k, v|
+          debug "#{k}: #{v.size}"
         end
         
         @partitions
