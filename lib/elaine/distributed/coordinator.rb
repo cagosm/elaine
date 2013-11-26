@@ -87,12 +87,14 @@ module Elaine
         zips = zipcodes
         debug "distributing zipcodes"
         @workers.each do |worker_node|
+          debug "Sending zipcodes to: #{worker_node}"
           DCell::Node[worker_node][:postoffice].zipcodes = zips
         end
 
         # now send the graph
         debug "distributing graph"
         @partitions.each_pair do |worker_node, vertices|
+          debug "Sending graph to: #{worker_node}"
           DCell::Node[worker_node][:worker].init_graph vertices
         end
 
