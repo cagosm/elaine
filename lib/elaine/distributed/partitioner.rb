@@ -21,8 +21,8 @@ module Elaine
 
         vals.each_with_index do |v, idx|
           partition = idx % num_partitions
-          # @partitions[@workers[worker_node]] ||= []
-          # @partitions[@workers[worker_node]] << v
+          
+          partitions[partition] ||= []
           partitions[partition] << v
         end
 
