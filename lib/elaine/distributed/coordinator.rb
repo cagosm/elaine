@@ -13,13 +13,14 @@ module Elaine
       attr_reader :partitions
       attr_reader :num_partitions
 
-      def initialize(graph: nil, num_partitions: 1, stop_condition: Celluloid::Condition.new)
+      def initialize(graph: nil, num_partitions: 1, stop_condition: Celluloid::Condition.new, partitioner: Elaine::Distributed::Partitioner)
         @workers = []
         @num_partitions = num_partitions
         @graph = graph
         info "GOT GRAPH: #{graph}"
         @partitions = Hash.new
         @stop_condition = stop_condition
+        @partitioner = partitioner
       end
 
       def graph=(g)
@@ -39,30 +40,37 @@ module Elaine
       end
 
       def partition
-        # not sure if we should re-initialize or not
-        @partitions = Hash.new
+        # # not sure if we should re-initialize or not
+        # @partitions = Hash.new
 
-        # size = (@graph.size.to_f / workers.size).ceil
+        # # size = (@graph.size.to_f / workers.size).ceil
 
-        # @graph.each_slice(size).with_index do |slice, index|
-        #   @partitions[@workers[index]] = slice
+        # # @graph.each_slice(size).with_index do |slice, index|
+        # #   @partitions[@workers[index]] = slice
+        # # end
+
+        # # trying a slow partitioning to check a bug...
+        # debug "running slow partitioner..."
+
+        # @graph.each_with_index do |v, idx|
+        #   worker_node = idx % @workers.size
+        #   @partitions[@workers[worker_node]] ||= []
+        #   @partitions[@workers[worker_node]] << v
         # end
 
-        # trying a slow partitioning to check a bug...
-        debug "running slow partitioner..."
-
-        @graph.each_with_index do |v, idx|
-          worker_node = idx % @workers.size
-          @partitions[@workers[worker_node]] ||= []
-          @partitions[@workers[worker_node]] << v
-        end
-
-        debug "done running slow partitioner:"
-        @partitions.each_pair do |k, v|
-          debug "#{k}: #{v.size}"
-        end
+        # debug "done running slow partitioner:"
+        # @partitions.each_pair do |k, v|
+        #   debug "#{k}: #{v.size}"
+        # end
+        debug "running partitioner: #{@partitioner}"
+        tmp_partitions = partitioner.partition(@graph, @workers.size)
+        debug "done partitioner: #{@partitioner}"
         
-        @partitions
+        # now we need to map the partitions back to the workers.
+        tmp_partitions.each_with_index do |p, idx|
+          @partitions[@workers[idx]] = p
+        end
+
       end
 
       def register_worker(worker_node)
