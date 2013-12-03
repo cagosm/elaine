@@ -20,6 +20,16 @@ module Elaine
         @stop_condition = stop_condition
       end
 
+      def add_vertex(v)
+        @vertices2 ||= []
+
+        vertex = v[:klazz].new v[:id], v[:value], Celluloid::Actor[:postoffice], v[:outedges]
+
+        @vertices2 << vertex
+        @active = @vertices2.select { |v| v.active? }.size
+
+      end
+
       def init_graph(g=[])
         raise 'empty worker graph' if g.empty?
         if @vertices.size > 0

@@ -25,21 +25,24 @@ describe Elaine::Distributed::Coordinator do
     [
       {
         klazz: DistributedAddVertex,
-        id: :igvita,
+        # id: :igvita,
+        id: 0,
         value: 1,
-        outedges: [:wikipedia]
+        outedges: [1]
       },
       {
         klazz: DistributedAddVertex,
-        id: :wikipedia,
+        # id: :wikipedia,
+        id: 1,
         value: 2,
-        outedges: [:google]
+        outedges: [2]
       },
       {
         klazz: DistributedAddVertex,
-        id: :google,
+        # id: :google,
+        id: 2,
         value: 1,
-        outedges: [:wikipedia]
+        outedges: [1]
       }
     ]
   end
@@ -63,21 +66,24 @@ describe Elaine::Distributed::Coordinator do
     g =[
       {
         klazz: DistributedPageRankVertex,
-        id: :igvita,
+        # id: :igvita,
+        id: 0,
         value: 1,
-        outedges: [:wikipedia]
+        outedges: [1]
       },
       {
         klazz: DistributedPageRankVertex,
-        id: :wikipedia,
+        # id: :wikipedia,
+        id: 1,
         value: 1,
-        outedges: [:google]
+        outedges: [2]
       },
       {
         klazz: DistributedPageRankVertex,
-        id: :google,
+        # id: :google,
+        id: 2,
         value: 1,
-        outedges: [:igvita]
+        outedges: [0]
       }
     ]
 
@@ -101,21 +107,24 @@ describe Elaine::Distributed::Coordinator do
       #                   name     value  out-edges
       {
         klazz: DistributedPageRankVertex,
-        id: :igvita,
+        # id: :igvita,
+        id: 0,
         value: 1,
-        outedges: [:igvita, :wikipedia]
+        outedges: [0, 1]
       },
       {
         klazz: DistributedPageRankVertex,
-        id: :wikipedia,
+        # id: :wikipedia,
+        id: 1,
         value: 1,
-        outedges: [:igvita, :google]
+        outedges: [0, 2]
       },
       {
         klazz: DistributedPageRankVertex,
-        id: :google,
+        # id: :google,
+        id: 2,
         value: 1,
-        outedges: [:google]
+        outedges: [2]
       }
     ]
     DCell::Node["test.elaine.coordinator"][:coordinator].graph = g
@@ -124,11 +133,14 @@ describe Elaine::Distributed::Coordinator do
 
     vertex_values = DCell::Node["test.elaine.coordinator"][:coordinator].vertex_values
     vertex_values.each do |v|
-      if v[:id] == :igvita
+      # if v[:id] == :igvita
+      if v[:id] == 0
         (v[:value] * 100).ceil.to_i.should == 19
-      elsif v[:id] == :wikipedia
+      # elsif v[:id] == :wikipedia
+      elsif v[:id] == 1
         (v[:value] * 100).ceil.to_i.should == 13
-      elsif v[:id] == :google
+      # elsif v[:id] == :google
+      elsif v[:id] == 2
         (v[:value] * 100).to_i.should == 68
       else
         fail "Unexpected node id: #{v[:id]}"

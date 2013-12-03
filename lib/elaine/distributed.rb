@@ -4,6 +4,7 @@ require 'elaine/distributed/worker'
 require 'elaine/distributed/post_office'
 require 'elaine/distributed/vertex'
 require 'elaine/distributed/partitioner'
+require 'elaine/distributed/md5_partitioner'
 
 module Elaine
   module Distributed

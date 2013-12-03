@@ -1,22 +1,20 @@
-# require 'dnssd'
-# require 'celluloid/io'
-# require 'dcell'
+require 'digest/md5'
+
+require 'logger'
 
 module Elaine
   module Distributed
     # this might serve better as a module that gets included?
+    class MD5Partitioner
 
-    # Partitions into ranges...
-    class Partitioner
-
-      # get the key for a given value.
-      # for this partitioner, it's just the value itself, but you can perhaps
-      # hash something too...
       def self.key(v)
-        v
+        d = Digest::MD5.hexdigest(v.to_s)
+        [d].pack("H*").unpack("l>").first
       end
 
       def self.partition(vals, num_partitions)
+        logger = Logger.new(STDERR)
+
         partitions = Array.new(num_partitions)
 
 
@@ -37,15 +35,14 @@ module Elaine
         partition_num = 0
         min_val = nil
         max_val = nil
-        vals.sort.each do |v|
-          if partitions[partition_num] <= local_count
-            # we need to move to the next partition
-            partition_ranges[partition_num] = (min_val..max_val)
-            min_val = nil
-            max_val = nil
-            partition_num += 1
-            local_count = 0
-          end
+        vals.map { |t| key(t)}.sort.each do |v|
+          logger.debug "local_count: #{local_count}"
+          logger.debug "size of partition for partition number #{partition_num}: #{partitions[partition_num]}"
+
+
+          # logger.debug "key for #{v} = #{key(v)}"
+
+          # min_val ||= key(v)
           min_val ||= v
           min_val = v if v < min_val
 
@@ -54,6 +51,16 @@ module Elaine
           max_val ||= v
           max_val = v if v > max_val
           local_count += 1
+
+          if partitions[partition_num] <= local_count
+            # we need to move to the next partition
+            logger.debug "moving to next partition?"
+            partition_ranges[partition_num] = (min_val..max_val)
+            min_val = nil
+            max_val = nil
+            partition_num += 1
+            local_count = 0
+          end
 
         end
         

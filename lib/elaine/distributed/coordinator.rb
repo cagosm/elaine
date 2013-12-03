@@ -31,10 +31,11 @@ module Elaine
 
       def zipcodes
         zips = {}
-        @partitions.each_pair do |zip, vertices|
-          vertices.each do |vertex|
-            zips[vertex[:id]] = zip
-          end
+        @partitions.each_pair do |zip, range|
+          # vertices.each do |vertex|
+            # zips[vertex[:id]] = zip
+          # end
+          zips[range] = zip
         end
         zips
       end
@@ -63,13 +64,17 @@ module Elaine
         #   debug "#{k}: #{v.size}"
         # end
         debug "running partitioner: #{@partitioner}"
-        tmp_partitions = partitioner.partition(@graph, @workers.size)
+        tmp_partitions = @partitioner.partition(@graph.map {|v| v[:id]}, @workers.size)
         debug "done partitioner: #{@partitioner}"
+
+        debug "tmp_partititions: #{tmp_partitions}"
         
         # now we need to map the partitions back to the workers.
         tmp_partitions.each_with_index do |p, idx|
           @partitions[@workers[idx]] = p
         end
+
+        debug "@partitions: #{@partitions}"
 
       end
 
@@ -101,9 +106,29 @@ module Elaine
 
         # now send the graph
         debug "distributing graph"
-        @partitions.each_pair do |worker_node, vertices|
-          debug "Sending graph to: #{worker_node}"
-          DCell::Node[worker_node][:worker].init_graph vertices
+        # @partitions.each_pair do |worker_node, vertices|
+        #   debug "Sending vertex #{v} to: #{worker_node}"
+        #   # DCell::Node[worker_node][:worker].init_graph vertices
+        # end
+
+        # TODO This needs to be dealt with differently if we are loading
+        # the graph from a remote location (i.e., not sending the graph to each
+        # worker)
+        @graph.each do |vertex|
+          vertex_key = @partitioner.key(vertex[:id])
+          # zips.each_pair do |k, v|
+
+          # end
+          debug "zips: #{zips}"
+          worker_node = zips.select { |k, v| k.include? vertex_key }
+
+          if worker_node.size != 1
+            raise "Bad worker node size: #{worker_node.size}"
+          end
+
+          worker_node = worker_node.first[1]
+
+          DCell::Node[worker_node][:worker].add_vertex vertex
         end
 
 
