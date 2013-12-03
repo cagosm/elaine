@@ -13,7 +13,7 @@ module Elaine
       attr_reader :partitions
       attr_reader :num_partitions
 
-      def initialize(graph: nil, num_partitions: 1, stop_condition: Celluloid::Condition.new, partitioner: Elaine::Distributed::Partitioner)
+      def initialize(graph: nil, num_partitions: 1, stop_condition: Celluloid::Condition.new, partitioner: Elaine::Distributed::MD5Partitioner)
         @workers = []
         @num_partitions = num_partitions
         @graph = graph
