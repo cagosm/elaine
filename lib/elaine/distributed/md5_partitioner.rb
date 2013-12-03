@@ -36,8 +36,8 @@ module Elaine
         min_val = nil
         max_val = nil
         vals.map { |t| key(t)}.sort.each do |v|
-          logger.debug "local_count: #{local_count}"
-          logger.debug "size of partition for partition number #{partition_num}: #{partitions[partition_num]}"
+          # logger.debug "local_count: #{local_count}"
+          # logger.debug "size of partition for partition number #{partition_num}: #{partitions[partition_num]}"
 
 
           # logger.debug "key for #{v} = #{key(v)}"
@@ -54,7 +54,7 @@ module Elaine
 
           if partitions[partition_num] <= local_count
             # we need to move to the next partition
-            logger.debug "moving to next partition?"
+            # logger.debug "moving to next partition?"
             partition_ranges[partition_num] = (min_val..max_val)
             min_val = nil
             max_val = nil

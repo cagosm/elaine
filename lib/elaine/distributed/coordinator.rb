@@ -119,7 +119,7 @@ module Elaine
           # zips.each_pair do |k, v|
 
           # end
-          debug "zips: #{zips}"
+          # debug "zips: #{zips}"
           worker_node = zips.select { |k, v| k.include? vertex_key }
 
           if worker_node.size != 1
