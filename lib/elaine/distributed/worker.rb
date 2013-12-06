@@ -84,6 +84,10 @@ module Elaine
         pmap(active) do |v|
           v.step
         end
+        
+        # active.each do |v|
+        #   v.step
+        # end
         @active = active.select {|v| v.active?}.size    
       end
 
