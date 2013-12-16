@@ -79,15 +79,28 @@ module Elaine
 
       def superstep
         active = @vertices2.select {|v| v.active?}
+        debug "There are #{active.size} active vertices in this step"
 
-        
-        pmap(active) do |v|
-          v.step
+        # we are going to make 4 slices and run them each in a thread
+        slices = active.each_slice((active.size / 2).to_i)
+
+        pmap(slices) do |s|
+          s.each do |v|
+            v.step
+          end
         end
+        
+        # pmap(active) do |v|
+        #   v.step
+        # end
         
         # active.each do |v|
         #   v.step
         # end
+
+        debug "Delivering all messages from end of super step."
+        Celluloid::Actor[:postoffice].deliver_all
+
         @active = active.select {|v| v.active?}.size    
       end
 

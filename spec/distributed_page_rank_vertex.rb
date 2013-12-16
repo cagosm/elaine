@@ -7,7 +7,7 @@ class DistributedPageRankVertex < Elaine::Distributed::Vertex
       # sum = messages.inject(0) {|total,msg| total += msg; total }
       # sum = messages.reduce(0, :+)
       sum = messages.reduce(0) do |total, msg|
-        raise "Got an out-of-step message! current superstep: #{superstep}, message from superstep: #{msg[:superstep]}" if msg[:superstep] != (superstep - 1)
+        raise "Got an out-of-step message! current superstep: #{superstep}, message from superstep: #{msg[:superstep]}, msg: #{msg}" if msg[:superstep] != (superstep - 1)
         total += msg[:value]
 
       end

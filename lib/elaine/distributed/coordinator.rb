@@ -40,6 +40,77 @@ module Elaine
         zips
       end
 
+      def distribute_graph(zips)
+        # debug "distributing graph"
+        # let's try to split the graph up into 1k vertex slices and then add
+        # them to workers in parallel... might speed things up
+
+        slices = @graph.each_slice(1_000)
+        pmap(slices) do |slice|
+          slice.each do |v|
+            vertex_key = @partitioner.key(v[:id])
+            worker_node = zips.select { |k, v| k.include? vertex_key }
+            if worker_node.size != 1
+              raise "Bad worker node size: #{worker_node.size}"
+            end
+            worker_node = worker_node.first[1]
+            DCell::Node[worker_node][:worker].add_vertex vertex
+          end
+        end
+        @graph.size
+      end
+
+      def pmap(enum, &block)
+        futures = enum.map { |elem| Celluloid::Future.new(elem, &block) }
+        futures.map { |future| future.value }
+      end
+
+      def init_job
+        # zipcodes = {}
+        debug "partitioning"
+        partition
+        # debug "Partitions: #{@partitions}"
+
+        # distribute the zipcodes
+        debug "building zipcodes"
+        zips = zipcodes
+        debug "distributing zipcodes"
+        @workers.each do |worker_node|
+          debug "Sending zipcodes to: #{worker_node}"
+          DCell::Node[worker_node][:postoffice].zipcodes = zips
+        end
+
+
+        # now send the graph
+        debug "distributing graph"
+        distribute_graph zips
+        debug "done distributing graph"
+        # @partitions.each_pair do |worker_node, vertices|
+        #   debug "Sending vertex #{v} to: #{worker_node}"
+        #   # DCell::Node[worker_node][:worker].init_graph vertices
+        # end
+
+        # TODO This needs to be dealt with differently if we are loading
+        # the graph from a remote location (i.e., not sending the graph to each
+        # worker)
+        # @graph.each do |vertex|
+        #   vertex_key = @partitioner.key(vertex[:id])
+        #   # zips.each_pair do |k, v|
+
+        #   # end
+        #   # debug "zips: #{zips}"
+        #   worker_node = zips.select { |k, v| k.include? vertex_key }
+
+        #   if worker_node.size != 1
+        #     raise "Bad worker node size: #{worker_node.size}"
+        #   end
+
+        #   worker_node = worker_node.first[1]
+
+        #   DCell::Node[worker_node][:worker].add_vertex vertex
+        # end
+      end
+
       def partition
         # # not sure if we should re-initialize or not
         # @partitions = Hash.new
@@ -89,67 +160,48 @@ module Elaine
         end
       end
 
-      def run_until_finished
-        # zipcodes = {}
-        debug "partitioning"
-        partition
-        # debug "Partitions: #{@partitions}"
-
-        # distribute the zipcodes
-        debug "building zipcodes"
-        zips = zipcodes
-        debug "distributing zipcodes"
-        @workers.each do |worker_node|
-          debug "Sending zipcodes to: #{worker_node}"
-          DCell::Node[worker_node][:postoffice].zipcodes = zips
-        end
-
-        # now send the graph
-        debug "distributing graph"
-        # @partitions.each_pair do |worker_node, vertices|
-        #   debug "Sending vertex #{v} to: #{worker_node}"
-        #   # DCell::Node[worker_node][:worker].init_graph vertices
-        # end
-
-        # TODO This needs to be dealt with differently if we are loading
-        # the graph from a remote location (i.e., not sending the graph to each
-        # worker)
-        @graph.each do |vertex|
-          vertex_key = @partitioner.key(vertex[:id])
-          # zips.each_pair do |k, v|
-
-          # end
-          # debug "zips: #{zips}"
-          worker_node = zips.select { |k, v| k.include? vertex_key }
-
-          if worker_node.size != 1
-            raise "Bad worker node size: #{worker_node.size}"
-          end
-
-          worker_node = worker_node.first[1]
-
-          DCell::Node[worker_node][:worker].add_vertex vertex
-        end
-
-
-        debug "Running job"
-        step_num = 0
-        loop do
-          step_num += 1
-          # execute a superstep and wait for workers to complete
-          debug "Initializing superstep #{step_num}"
+      def init_superstep
+         # execute a superstep and wait for workers to complete
+          debug "Initializing superstep"
           step = @workers.select do |w|
             debug "Checking for active vertices on node #{w}"
             DCell::Node[w][:worker].active > 0
           end.map {|w| DCell::Node[w][:worker].future(:init_superstep)}
           step.map { |f| f.value }
+      end
 
+      def superstep
+        init_superstep
+        step = @workers.select do |w|
+          DCell::Node[w][:worker].active > 0
+        end.map {|w| DCell::Node[w][:worker].future(:superstep)}
+
+        step.map { |f| f.value }
+      end
+
+      def active_worker_count
+        @workers.select { |w| DCell::Node[w][:worker].active > 0 }.size.zero?
+      end
+
+      def run_until_finished
+        
+        init_job
+
+        debug "Running job"
+        step_num = 0
+        loop do
+          step_num += 1
           debug "Running superstep #{step_num}"
-          step = @workers.select do |w|
-            DCell::Node[w][:worker].active > 0
-          end.map {|w| DCell::Node[w][:worker].future(:superstep)}
+          superstep
+         
+         # init_superstep
 
-          step.map { |f| f.value }
+         #  debug "Running superstep #{step_num}"
+         #  step = @workers.select do |w|
+         #    DCell::Node[w][:worker].active > 0
+         #  end.map {|w| DCell::Node[w][:worker].future(:superstep)}
+
+         #  step.map { |f| f.value }
 
           break if @workers.select { |w| DCell::Node[w][:worker].active > 0 }.size.zero?
         end
