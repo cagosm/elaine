@@ -54,7 +54,7 @@ module Elaine
               raise "Bad worker node size: #{worker_node.size}"
             end
             worker_node = worker_node.first[1]
-            DCell::Node[worker_node][:worker].add_vertex vertex
+            DCell::Node[worker_node][:worker].add_vertex v
           end
         end
         @graph.size
