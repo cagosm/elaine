@@ -82,7 +82,11 @@ module Elaine
         debug "There are #{active.size} active vertices in this step"
 
         # we are going to make 4 slices and run them each in a thread
-        slices = active.each_slice((active.size / 2).to_i)
+        debug "active.size: #{active.size}"
+        slice_size = (active.size / 2).to_i
+        slice_size = 1 if slice_size < 1
+        debug "slice size: #{slice_size}"
+        slices = active.each_slice(slice_size)
 
         pmap(slices) do |s|
           s.each do |v|
