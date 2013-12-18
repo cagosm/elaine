@@ -20,6 +20,12 @@ module Elaine
         @stop_condition = stop_condition
       end
 
+      def add_vertices(vs)
+        vs.each do |v|
+          add_vertex v
+        end
+      end
+
       def add_vertex(v)
         @vertices2 ||= []
 
@@ -104,6 +110,8 @@ module Elaine
 
         debug "Delivering all messages from end of super step."
         Celluloid::Actor[:postoffice].deliver_all
+
+        debug "Finished super step"
 
         @active = active.select {|v| v.active?}.size    
       end

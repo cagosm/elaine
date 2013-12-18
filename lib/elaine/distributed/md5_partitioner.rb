@@ -35,7 +35,14 @@ module Elaine
         partition_num = 0
         min_val = nil
         max_val = nil
-        vals.map { |t| key(t)}.sort.each do |v|
+        # vals.map { |t| key(t)}.sort.each do |v|
+        tmp_vals = []
+        vals.each do |t|
+          tmp_vals << key(t)
+        end
+
+        tmp_vals.sort!
+        tmp_vals.each do |v|
           # logger.debug "local_count: #{local_count}"
           # logger.debug "size of partition for partition number #{partition_num}: #{partitions[partition_num]}"
 
@@ -63,6 +70,7 @@ module Elaine
           end
 
         end
+        tmp_vals.clear
         
         partition_ranges
       end

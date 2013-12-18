@@ -44,19 +44,42 @@ module Elaine
         # debug "distributing graph"
         # let's try to split the graph up into 1k vertex slices and then add
         # them to workers in parallel... might speed things up
-
-        slices = @graph.each_slice(1_000)
-        pmap(slices) do |slice|
-          slice.each do |v|
-            vertex_key = @partitioner.key(v[:id])
-            worker_node = zips.select { |k, v| k.include? vertex_key }
-            if worker_node.size != 1
-              raise "Bad worker node size: #{worker_node.size}"
-            end
-            worker_node = worker_node.first[1]
-            DCell::Node[worker_node][:worker].add_vertex v
-          end
+        remainder = @graph
+        zips.each_pair do |range, worker_node|
+          # to_add = @graph.select { |v| range.include? @partitioner.key(v[:id]) }
+          to_add, remainder = remainder.partition { |v| range.include? @partitioner.key(v[:id])}
+          debug "there are #{to_add.size} vertices to add to #{zips[range]} [#{range.first}, #{range.last}]"
+          DCell::Node[worker_node][:worker].add_vertices to_add
+          debug "finished adding vertices..."
         end
+
+        raise "Still #{remainder.size} vertices left to distribute!" if remainder.size > 0
+
+
+
+        # slice_size = (@graph.size / 50).to_i
+        # slice_size = 1 if slice_size < 1
+        # slices = @graph.each_slice(slice_size)
+        # pmap(slices) do |slice|
+        #   slice.each do |v|
+        #     vertex_key = @partitioner.key(v[:id])
+        #     worker_node = zips.select { |k, v| k.include? vertex_key }
+        #     if worker_node.size != 1
+        #       raise "Bad worker node size: #{worker_node.size}"
+        #     end
+        #     worker_node = worker_node.first[1]
+        #     DCell::Node[worker_node][:worker].add_vertex v
+        #   end
+        # end
+        # @graph.each do |v|
+        #   vertex_key = @partitioner.key(v[:id])
+        #   worker_node = zips.select { |k, v| k.include? vertex_key }
+        #   if worker_node.size != 1
+        #     raise "Bad worker node size: #{worker_node.size}"
+        #   end
+        #   worker_node = worker_node.first[1]
+        #   DCell::Node[worker_node][:worker].add_vertex v
+        # end
         @graph.size
       end
 
@@ -144,6 +167,9 @@ module Elaine
         tmp_partitions.each_with_index do |p, idx|
           @partitions[@workers[idx]] = p
         end
+        debug "clearing tmp_partitions..."
+        tmp_partitions.clear
+        debug "done clearing tmp_partitions..."
 
         debug "@partitions: #{@partitions}"
 
