@@ -19,6 +19,7 @@ module Elaine
 
 
         # this is a really poor implementation....
+        logger.debug "Finding partition sizes..."
         vals.each_with_index do |v, idx|
           partition = idx % num_partitions
           
@@ -37,11 +38,13 @@ module Elaine
         max_val = nil
         # vals.map { |t| key(t)}.sort.each do |v|
         tmp_vals = []
+        logger.debug "Building keys..."
         vals.each do |t|
           tmp_vals << key(t)
         end
 
         tmp_vals.sort!
+        logger.debug "Adding to partitions"
         tmp_vals.each do |v|
           # logger.debug "local_count: #{local_count}"
           # logger.debug "size of partition for partition number #{partition_num}: #{partitions[partition_num]}"

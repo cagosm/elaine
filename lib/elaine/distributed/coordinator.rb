@@ -46,12 +46,18 @@ module Elaine
         # them to workers in parallel... might speed things up
         remainder = @graph
 
-        pmap(zips.each_pair) do |range, worker_node|
+        zips.each_pair do |range, worker_node|
           # to_add = @graph.select { |v| range.include? @partitioner.key(v[:id]) }
           to_add, remainder = remainder.partition { |v| range.include? @partitioner.key(v[:id])}
           debug "there are #{to_add.size} vertices to add to #{zips[range]} [#{range.first}, #{range.last}]"
-          DCell::Node[worker_node][:worker].add_vertices to_add
-          debug "finished adding vertices..."
+          to_add.each_slice(1_000) do |slice|
+            debug "adding slice"
+            DCell::Node[worker_node][:worker].add_vertices slice
+            debug "finished adding slice"
+            
+          end
+          debug "finished adding all #{to_add.size} vertices to #{zips[range]}"
+          
         end
 
         raise "Still #{remainder.size} vertices left to distribute!" if remainder.size > 0

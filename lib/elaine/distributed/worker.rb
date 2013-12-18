@@ -21,7 +21,11 @@ module Elaine
       end
 
       def add_vertices(vs)
+        debug "Adding #{vs.size} vertices..."
+        counter = 0
         vs.each do |v|
+          counter += 1
+          debug "Adding vertex ##{counter}" if counter % 1_000 == 0
           add_vertex v
         end
       end
