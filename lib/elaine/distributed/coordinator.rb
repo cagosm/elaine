@@ -45,7 +45,8 @@ module Elaine
         # let's try to split the graph up into 1k vertex slices and then add
         # them to workers in parallel... might speed things up
         remainder = @graph
-        zips.each_pair do |range, worker_node|
+
+        pmap(zips.each_pair) do |range, worker_node|
           # to_add = @graph.select { |v| range.include? @partitioner.key(v[:id]) }
           to_add, remainder = remainder.partition { |v| range.include? @partitioner.key(v[:id])}
           debug "there are #{to_add.size} vertices to add to #{zips[range]} [#{range.first}, #{range.last}]"
