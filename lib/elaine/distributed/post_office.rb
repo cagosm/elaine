@@ -15,6 +15,7 @@ module Elaine
         @partitioner = partitioner
         @outbox = {}
         @out_box_buffer_size = out_box_buffer_size
+        @address_cache = {}
       end
 
       def zipcodes=(zipcodes)
@@ -37,15 +38,23 @@ module Elaine
       end
 
       def address(to)
-        dest = @zipcodes.keys.select { |k| k.include?(@partitioner.key(to)) }
-        if dest.size != 1
-          if dest.size > 1
-            raise "There were multiple destinations (#{dest.size}) found for node: #{to}"
-          else
-            raise "There was no destination found for node: #{to}"
+        if !@address_cache[to]
+          dest = @zipcodes.keys.select { |k| k.include?(@partitioner.key(to)) }
+          if dest.size != 1
+            if dest.size > 1
+              raise "There were multiple destinations (#{dest.size}) found for node: #{to}"
+            else
+              raise "There was no destination found for node: #{to}"
+            end
           end
+          @address_cache[to] = dest.first
         end
-        node = DCell::Node[@zipcodes[dest.first]]
+
+
+        node = DCell::Node[@zipcodes[@address_cache[to]]]
+        # debug "Address is: #{zipcodes[dest.first]}"
+        raise "Destination node (key: #{adresss_cache[to]}, node: #{@zipcodes[address_cache[to]]}) was nil!" if node.nil?
+        node
       end
 
 
@@ -68,6 +77,8 @@ module Elaine
         # end
 
         # trying bulk delivery with a buffer...
+        debug "to: #{to}"
+        debug "desitination node: #{node}"
         @outbox[node.id] ||= []
         @outbox[node.id].push({to: to, msg: msg})
 
@@ -112,6 +123,23 @@ module Elaine
         end
       end
 
+      def bulk_read_all(mailboxes)
+        debug "Bulk reading #{mailboxes.size} mailboxes"
+        ret = {}
+        mailboxes.each do |mailbox|
+          # node = address(mailbox)
+          # if node.id.eql?(DCell.me.id)
+            @mailboxes[mailbox] ||= []
+            msgs = Array.new(@mailboxes[mailbox])
+            @mailboxes[mailbox].clear # .shift(@mailboxes[mailbox].size)
+            ret[mailbox] = msgs
+          # end
+        end
+
+        ret
+
+      end
+
       def read_all(mailbox)
         node = address(mailbox)
         # debug "node: #{node}"
@@ -119,14 +147,14 @@ module Elaine
         # debug "DCell.me.id: '#{DCell.me.id}'"
         if node.id.eql?(DCell.me.id)
           @mailboxes[mailbox] ||= []
-          msgs = @mailboxes[mailbox].map { |v| v }
-          @mailboxes[mailbox].clear
+          msgs = @mailboxes[mailbox].shift(@mailboxes[mailbox].size) #.map { |v| v }
+          # @mailboxes[mailbox].clear
           msgs
           # msgs = @message_queue.select { |v| v[:to] == mailbox }
           # @message_queue.delete_if { |v| v[:to] == mailbox }
           # msgs
         else
-          raise "Can't destructively read a non-local mailbox!"
+          raise "Can't destructively read a non-local mailbox! (#{mailbox} on #{DCell.me.id}"
         end
       end
 

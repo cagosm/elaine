@@ -72,8 +72,21 @@ module Elaine
 
       # HACK this should be handled better...
       def init_superstep
-        @vertices2.each do |v|
-          v.messages = Celluloid::Actor[:postoffice].read_all(v.id)
+        debug "Starting init_superstep"
+        counter = 0
+        @vertices2.each_slice(5_000) do |slice|
+
+          counter += 1
+          debug "Loading messages for slice ##{counter}" if counter % 10 == 0
+          # v.messages = Celluloid::Actor[:postoffice].read_all(v.id)
+          slice_ids = []
+          slice.each do |v|
+            slice_ids << v.id
+          end
+          boxes = Celluloid::Actor[:postoffice].bulk_read_all(slice_ids)
+          slice.each do |v|
+            v.messages = boxes[v.id]
+          end
         end
         debug "#{DCell.me.id} finished init_superstep"
       end
