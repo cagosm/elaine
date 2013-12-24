@@ -106,7 +106,7 @@ module Elaine
 
         # we are going to make 4 slices and run them each in a thread
         debug "active.size: #{active.size}"
-        slice_size = (active.size / 2).to_i
+        slice_size = (active.size / 3).to_i
         slice_size = 1 if slice_size < 1
         debug "slice size: #{slice_size}"
         slices = active.each_slice(slice_size)
