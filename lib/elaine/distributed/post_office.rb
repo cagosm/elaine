@@ -48,6 +48,7 @@ module Elaine
             end
           end
           @address_cache[to] = dest.first
+          debug "Addres cache size: #{@address_cache.size}"
         end
 
 
