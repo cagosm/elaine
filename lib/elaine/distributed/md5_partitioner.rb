@@ -10,6 +10,9 @@ module Elaine
       def self.key(v)
         d = Digest::MD5.hexdigest(v.to_s)
         [d].pack("H*").unpack("l>").first
+
+        # return
+
       end
 
       def self.partition(vals, num_partitions)
