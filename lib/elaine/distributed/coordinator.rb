@@ -107,6 +107,7 @@ module Elaine
         debug "distributing zipcodes"
         @workers.each do |worker_node|
           debug "Sending zipcodes to: #{worker_node}"
+          # DCell::Node[worker_node][:worker].zipcodes = zips
           DCell::Node[worker_node][:postoffice].zipcodes = zips
         end
 

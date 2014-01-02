@@ -9,11 +9,12 @@ module Elaine
       attr_reader :mailboxes
       attr_reader :zipcodes
 
-      def initialize(partitioner: Elaine::Distributed::MD5Partitioner, out_box_buffer_size: 1_000 )
+      def initialize(partitioner: Elaine::Distributed::MD5Partitioner, out_box_buffer_size: 10_000 )
         @mailboxes = Hash.new
         @zipcodes = Hash.new
         @partitioner = partitioner
         @outbox = {}
+        @outbox2 = []
         @out_box_buffer_size = out_box_buffer_size
         @address_cache = {}
       end
@@ -26,6 +27,12 @@ module Elaine
         @mailboxes = Hash.new
         # @message_queue = []
         @outbox = Hash.new
+        zipcodes.each_value do |v|
+          debug "Initializing outbox for #{v}"
+          @outbox[v] = []
+        end
+
+
         # @message_queue = []
         # my_id = DCell.me.id
         # @zipcodes.each_pair do |k, v|
@@ -37,29 +44,17 @@ module Elaine
 
       end
 
-      def address(to)
-        if !@address_cache[to]
-          dest = @zipcodes.keys.select { |k| k.include?(@partitioner.key(to)) }
-          if dest.size != 1
-            if dest.size > 1
-              raise "There were multiple destinations (#{dest.size}) found for node: #{to}"
-            else
-              raise "There was no destination found for node: #{to}"
-            end
-          end
-          @address_cache[to] = dest.first
-          debug "Addres cache size: #{@address_cache.size}"
+
+      def deliver_multiple(msgs)
+        msgs.each do |msg|
+          deliver(msg[:to], msg[:msg])
         end
-
-
-        node = DCell::Node[@zipcodes[@address_cache[to]]]
-        # debug "Address is: #{zipcodes[dest.first]}"
-        raise "Destination node (key: #{adresss_cache[to]}, node: #{@zipcodes[address_cache[to]]}) was nil!" if node.nil?
-        node
+        msgs.size
       end
 
 
       def deliver(to, msg)
+        # return nil
         node = address(to)
 
         # if node.id.eql?(DCell.me.id)
@@ -78,16 +73,43 @@ module Elaine
         # end
 
         # trying bulk delivery with a buffer...
-        debug "to: #{to}"
-        debug "desitination node: #{node}"
+        # debug "to: #{to}"
+        # debug "destination node: #{node.id}"
+
+        if node.id == DCell.me.id
+          debug "Delivering local message"
+          @mailboxes[to].push(msg)
+          return nil
+        end
+
         @outbox[node.id] ||= []
         @outbox[node.id].push({to: to, msg: msg})
+        # @outbox2.push({to: to, msg: msg})
 
         # check to see if we should do a bulk delivery...
         if @outbox[node.id].size >= @out_box_buffer_size
           to_deliver = @outbox[node.id].shift @out_box_buffer_size
           deliver_bulk node.id, to_deliver
         end
+        # if @outbox2.size >= @out_box_buffer_size
+        #   debug "outbox buffer size reached #{@outbox2.size}/#{@out_box_buffer_size}"
+        #   msgs = @outbox2.shift(@out_box_buffer_size)
+        #   # deliver_bulk2 to_deliver
+
+        #   to_deliver = {}
+        #   msgs.each do |m|
+        #     node = address(m[:to])
+        #     debug "to: #{m[:to]}"
+        #     debug "destination node: #{node.id}"
+        #     to_deliver[node.id] ||= []
+        #     to_deliver[node.id] << m
+        #   end
+
+        #   to_deliver.each_pair do |k, v|
+        #     deliver_bulk(k, v)
+        #   end
+
+        # end
 
         nil
       end
@@ -95,21 +117,50 @@ module Elaine
       def deliver_all
         @outbox.each_pair do |k, v|
           unless v.empty?
-            deliver_bulk k, v
+            deliver_bulk k, Array.new(v)
           end
+          v.clear
         end
-        @outbox.clear
+        @outbox.each_value { |v| v.clear }
+
+        # msgs = Array.new(@outbox2)
+        #  #.shift(@out_box_buffer_size)
+        #   # deliver_bulk2 to_deliver
+
+        # to_deliver = {}
+        # msgs.each do |m|
+        #   debug "deliver_all m: #{m}"
+        #   node = address(m[:to])
+        #   debug "destination node: #{node.id}"
+        #   to_deliver[node.id] ||= []
+        #   to_deliver[node.id] << m
+        # end
+
+        # to_deliver.each_pair do |k, v|
+        #   deliver_bulk(k, v)
+        # end
+
+        # @outbox2.clear
       end
 
       def deliver_bulk(destination_node_address, msgs)
         debug "delivering bulk to: #{destination_node_address}"
-        DCell::Node[destination_node_address][:postoffice].async.receive_bulk(msgs)
+        n = DCell::Node[destination_node_address]
+
+        debug "node: #{n}"
+        s = n[:postoffice]
+        debug "worker: #{s}"
+        raise "No worker service for #{destination_node_address}" if s.nil?
+        s.async.receive_bulk(msgs)
         msgs.size
       end
 
+
+
       def receive_bulk(msgs)
+        debug "Post office receiving bulk (#{msgs.size} messages)"
         msgs.each do |msg|
-          @mailboxes[msg[:to]] ||= []
+          # @mailboxes[msg[:to]] ||= []
           @mailboxes[msg[:to]].push msg[:msg]
         end
         msgs.size
@@ -157,6 +208,31 @@ module Elaine
         else
           raise "Can't destructively read a non-local mailbox! (#{mailbox} on #{DCell.me.id}"
         end
+      end
+
+      protected
+
+      def address(to)
+        # if !@address_cache[to]
+          dest = @zipcodes.keys.select { |k| k.include?(@partitioner.key(to)) }
+          if dest.size != 1
+            if dest.size > 1
+              raise "There were multiple destinations (#{dest.size}) found for node: #{to}"
+            else
+              raise "There was no destination found for node: #{to}"
+            end
+          end
+          # @address_cache[to] = dest.first
+          d = dest.first
+          # debug "Addres cache size: #{@address_cache.size}"
+        # end
+
+
+        # node = DCell::Node[@zipcodes[@address_cache[to]]]
+        node = DCell::Node[@zipcodes[d]]
+        # debug "Address is: #{zipcodes[dest.first]}"
+        raise "Destination node (key: #{d}, node: #{@zipcodes[d]}) was nil!" if node.nil?
+        node
       end
 
     end # class PostOffice
