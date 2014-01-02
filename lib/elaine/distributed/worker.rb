@@ -210,7 +210,8 @@ module Elaine
         vertex = v[:klazz].new v[:id], v[:value], Celluloid::Actor[:postoffice], v[:outedges]
 
         @vertices2 << vertex
-        @active = @vertices2.select { |v| v.active? }.size
+        # @active = @vertices2.select { |v| v.active? }.size
+        @active += 1
 
       end
 
