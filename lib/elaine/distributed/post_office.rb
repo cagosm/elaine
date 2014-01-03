@@ -77,7 +77,7 @@ module Elaine
         # debug "destination node: #{node.id}"
 
         if node.id == DCell.me.id
-          debug "Delivering local message"
+          debug "Delivering local message to #{to}"
           @mailboxes[to].push(msg)
           return nil
         end
