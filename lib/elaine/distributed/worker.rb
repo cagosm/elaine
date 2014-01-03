@@ -28,7 +28,24 @@ module Elaine
 
         @address_cache = {}
         @num_partitions = num_partitions
+        @active_count = 0
         # @postoffice = Elaine::Distributed::PostOffice.new
+      end
+
+      def active?
+        # there are two ways a vertex can be active:
+        # 1) It's specifically active via the .active? method
+        # 2) It has messages in its mailbox
+        
+        @vertices2.each do |v|
+          if v.active?
+            return true
+          end
+          if Celluloid::Actor[:postoffice].messages?(v.id)
+            return true
+          end
+        end
+        false
       end
 
 
@@ -210,8 +227,8 @@ module Elaine
         vertex = v[:klazz].new v[:id], v[:value], Celluloid::Actor[:postoffice], v[:outedges]
 
         @vertices2 << vertex
-        # @active = @vertices2.select { |v| v.active? }.size
-        @active += 1
+        # @active_count = @vertices2.select { |v| v.active? }.size
+        @active_count += 1
 
       end
 
@@ -228,7 +245,7 @@ module Elaine
         # we are going to assume that graphs come in as json documents
         # *describing* the graph.
         # @vertices = graph
-        # @active   = graph.size
+        # @active_count   = graph.size
 
         # HACK the local vertices should be dealt with differently than
         # the @vertices2 member
@@ -240,7 +257,7 @@ module Elaine
           v = n[:klazz].new n[:id], n[:value], Celluloid::Actor[:postoffice], n[:outedges]
           @vertices2 << v
         end
-        @active = @vertices.size
+        @active_count = @vertices.size
 
         debug "There are #{@vertices.size} vertices in this worker."
 
@@ -314,7 +331,7 @@ module Elaine
 
         info "Finished super step"
 
-        @active = active.select {|v| v.active?}.size    
+        @active_count = active.select {|v| v.active?}.size    
       end
 
       # def deliver_all

@@ -199,7 +199,7 @@ module Elaine
           debug "Initializing superstep"
           step = @workers.select do |w|
             debug "Checking for active vertices on node #{w}"
-            DCell::Node[w][:worker].active > 0
+            DCell::Node[w][:worker].active?
           end.map {|w| DCell::Node[w][:worker].future(:init_superstep)}
           step.map { |f| f.value }
       end
@@ -207,14 +207,14 @@ module Elaine
       def superstep
         init_superstep
         step = @workers.select do |w|
-          DCell::Node[w][:worker].active > 0
+          DCell::Node[w][:worker].active?
         end.map {|w| DCell::Node[w][:worker].future(:superstep)}
 
         step.map { |f| f.value }
       end
 
       def active_worker_count
-        @workers.select { |w| DCell::Node[w][:worker].active > 0 }.size.zero?
+        @workers.select { |w| DCell::Node[w][:worker].active? }.size
       end
 
       def run_until_finished
@@ -237,7 +237,7 @@ module Elaine
 
          #  step.map { |f| f.value }
 
-          break if @workers.select { |w| DCell::Node[w][:worker].active > 0 }.size.zero?
+          break if @workers.select { |w| DCell::Node[w][:worker].active? }.size.zero?
         end
         debug "Job finished!"
       end

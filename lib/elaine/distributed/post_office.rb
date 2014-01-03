@@ -210,6 +210,10 @@ module Elaine
         end
       end
 
+      def messages?(mailbox)
+        @mailboxes[mailbox].size > 0
+      end
+
       protected
 
       def address(to)
