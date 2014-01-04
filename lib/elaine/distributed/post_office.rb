@@ -217,16 +217,19 @@ module Elaine
       protected
 
       def address(to)
-        # if !@address_cache[to]
-          dest = @zipcodes.keys.select { |k| k.include?(@partitioner.key(to)) }
-          if dest.size != 1
-            if dest.size > 1
-              raise "There were multiple destinations (#{dest.size}) found for node: #{to}"
-            else
-              raise "There was no destination found for node: #{to}"
-            end
+        start_time = Time.now.to_i
+      # if !@address_cache[to]
+        dest = @zipcodes.keys.select { |k| k.include?(@partitioner.key(to)) }
+        if dest.size != 1
+          if dest.size > 1
+            raise "There were multiple destinations (#{dest.size}) found for node: #{to}"
+          else
+            raise "There was no destination found for node: #{to}"
           end
-          # @address_cache[to] = dest.first
+        end
+        # @address_cache[to] = dest.first
+          end_time = Time.now.to_i
+          debug "address(#{to}) took #{end_time - start_time} seconds."
           d = dest.first
           # debug "Addres cache size: #{@address_cache.size}"
         # end

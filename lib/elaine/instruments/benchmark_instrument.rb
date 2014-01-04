@@ -55,11 +55,11 @@ module Elaine
         def measure(label="")
           # raise "no method to measure!" if method.nil?
 
-          puts "what's up?"
+          # puts "what's up?"
 
           instrument_measurements[label] ||= []
 
-          puts "measures: #{instrument_measurements}"
+          # puts "measures: #{instrument_measurements}"
           # return
           v = nil
           measurement = Benchmark::measure { v = yield}
@@ -67,7 +67,7 @@ module Elaine
           # instrument_measurements[label] << Benchmark::measure { v = yield }
           instrument_measurements[label] << measurement.real
           # puts "#{instrument_measurements}"
-          puts "v: #{v}"
+          # puts "v: #{v}"
           v
         end
 
