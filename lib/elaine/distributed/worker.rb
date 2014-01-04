@@ -36,12 +36,14 @@ module Elaine
         # there are two ways a vertex can be active:
         # 1) It's specifically active via the .active? method
         # 2) It has messages in its mailbox
-        
+        debug "Checking active status."
         @vertices2.each do |v|
           if v.active?
+            debug "Vertex #{v.id} was active."
             return true
           end
           if Celluloid::Actor[:postoffice].messages?(v.id)
+            debug "Vertex #{v.id} had messages"
             return true
           end
         end
@@ -280,6 +282,7 @@ module Elaine
           boxes = Celluloid::Actor[:postoffice].bulk_read_all(slice_ids)
           slice.each do |v|
             v.messages = boxes[v.id]
+            v.active! if v.messages.size > 0
           end
         end
         debug "#{DCell.me.id} finished init_superstep"

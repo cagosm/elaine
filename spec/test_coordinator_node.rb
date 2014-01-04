@@ -8,5 +8,6 @@ load File.expand_path("../distributed_page_rank_vertex.rb", __FILE__)
 
 DCell.start id: "test.elaine.coordinator", addr: "tcp://127.0.0.1:8090"
 
+Celluloid.logger.level = ::Logger::WARN
 Elaine::Distributed::Coordinator.supervise_as :coordinator, partitioner: Elaine::Distributed::MD5Partitioner
 sleep

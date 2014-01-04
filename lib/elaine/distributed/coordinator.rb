@@ -1,12 +1,14 @@
 # require 'dnssd'
 # require 'celluloid/io'
 require 'dcell'
+# require 'elaine/instruments'
 
 module Elaine
   module Distributed
     class Coordinator
       include Celluloid
       include Celluloid::Logger
+      # include Elaine::Instruments::Instrument
       # finalizer :shutdown
 
       attr_reader :workers
@@ -21,6 +23,7 @@ module Elaine
         @partitions = Hash.new
         @stop_condition = stop_condition
         @partitioner = partitioner
+        # @instrument = instrument
       end
 
       def graph=(g)
