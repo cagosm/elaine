@@ -24,7 +24,7 @@ module Elaine
 
         @out_box_buffer_size = out_box_buffer_size
 
-        @outbox2 = []
+        @outbox = []
 
         @address_cache = {}
         @num_partitions = num_partitions
@@ -50,33 +50,88 @@ module Elaine
         false
       end
 
+      def set_zipcodes(zips)
+        @zipcodes = zips
+      end
+
+      def address(to)
+        start_time = Time.now.to_i
+      # if !@address_cache[to]
+        dest = @zipcodes.keys.select { |k| k.include?(@partitioner.key(to)) }
+        if dest.size != 1
+          if dest.size > 1
+            raise "There were multiple destinations (#{dest.size}) found for node: #{to}"
+          else
+            raise "There was no destination found for node: #{to}"
+          end
+        end
+        # @address_cache[to] = dest.first
+          end_time = Time.now.to_i
+          debug "address(#{to}) took #{end_time - start_time} seconds."
+          d = dest.first
+          # debug "Addres cache size: #{@address_cache.size}"
+        # end
 
 
+        # node = DCell::Node[@zipcodes[@address_cache[to]]]
+        node = DCell::Node[@zipcodes[d]]
+        # debug "Address is: #{zipcodes[dest.first]}"
+        raise "Destination node (key: #{d}, node: #{@zipcodes[d]}) was nil!" if node.nil?
+        node
+      end
 
-      def zipcodes=(zipcodes)
-        # @postoffice.zipcodes = zipcodes
-        @zipcodes = zipcodes
+      def deliver_all
+        # debug "outbox buffer size reached #{@outbox2.size}/#{@out_box_buffer_size}"
+        # msgs = @outbox2.shift(@out_box_buffer_size)
+        # deliver_bulk2 to_deliver
 
-        # do we need to initialize all the mailboxes here?
-        # might be smart?
-        @mailboxes = Hash.new
-        # @message_queue = []
-        @outbox = Hash.new
-        zipcodes.each_value do |v|
-          debug "Initializing outbox for #{v}"
-          @outbox[v] = []
+        # msgs = Array.new(@outbox)
+
+        to_deliver = {}
+        @outbox.each do |m|
+          raise "Message was nil!" if m.nil?
+          node = address(m[:to])
+          debug "to: #{m[:to]}"
+          debug "destination node: #{node.id}"
+          to_deliver[node.id] ||= []
+          to_deliver[node.id] << m
         end
 
-
-        # @message_queue = []
-        # my_id = DCell.me.id
-        # @zipcodes.each_pair do |k, v|
-        #   if v == my_id
-        #     debug "Creating mailbox for: #{k}"
-        #     @mailboxes[k] = []
-        #   end
-        # end
+        to_deliver.each_pair do |k, v|
+          Celluloid::Actor[:postoffice].deliver_bulk(k, v)
+        end
+        @outbox.clear
       end
+
+      def deliver(to, msg)
+        debug "worker#deliver(#{to}, #{msg})"
+        @outbox.push({to: to, msg: msg})
+      end
+
+      # def zipcodes=(zipcodes)
+      #   # @postoffice.zipcodes = zipcodes
+      #   @zipcodes = zipcodes
+
+      #   # do we need to initialize all the mailboxes here?
+      #   # might be smart?
+      #   @mailboxes = Hash.new
+      #   # @message_queue = []
+      #   @outbox = Hash.new
+      #   zipcodes.each_value do |v|
+      #     debug "Initializing outbox for #{v}"
+      #     @outbox[v] = []
+      #   end
+
+
+      #   # @message_queue = []
+      #   # my_id = DCell.me.id
+      #   # @zipcodes.each_pair do |k, v|
+      #   #   if v == my_id
+      #   #     debug "Creating mailbox for: #{k}"
+      #   #     @mailboxes[k] = []
+      #   #   end
+      #   # end
+      # end
 
       # def address(to)
       #   @postoffice.address(to)
@@ -226,6 +281,7 @@ module Elaine
       def add_vertex(v)
         @vertices2 ||= []
 
+        # vertex = v[:klazz].new v[:id], v[:value], self, v[:outedges]
         vertex = v[:klazz].new v[:id], v[:value], Celluloid::Actor[:postoffice], v[:outedges]
 
         @vertices2 << vertex
@@ -257,6 +313,7 @@ module Elaine
           @vertices << n[:id]
           # v = n[:klazz].new n[:id], n[:value], Celluloid::Actor[:postoffice], n[:outedges]
           v = n[:klazz].new n[:id], n[:value], Celluloid::Actor[:postoffice], n[:outedges]
+          # v = n[:klazz].new n[:id], n[:value], self, n[:outedges]
           @vertices2 << v
         end
         @active_count = @vertices.size
@@ -330,6 +387,7 @@ module Elaine
         info "Delivering all messages from end of super step."
         # Celluloid::Actor[:postoffice].deliver_all
         Celluloid::Actor[:postoffice].deliver_all
+        # deliver_all
         # info "Done delivering"
 
         info "Finished super step"

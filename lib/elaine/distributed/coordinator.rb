@@ -23,8 +23,11 @@ module Elaine
         @partitions = Hash.new
         @stop_condition = stop_condition
         @partitioner = partitioner
+        @zipcodes = zipcodes
         # @instrument = instrument
       end
+
+
 
       def graph=(g)
         debug "Setting graph"
@@ -200,24 +203,31 @@ module Elaine
       def init_superstep
          # execute a superstep and wait for workers to complete
           debug "Initializing superstep"
-          step = @workers.select do |w|
-            debug "Checking for active vertices on node #{w}"
-            DCell::Node[w][:worker].active?
-          end.map {|w| DCell::Node[w][:worker].future(:init_superstep)}
+          # step = @workers.select do |w|
+          #   debug "Checking for active vertices on node #{w}"
+          #   DCell::Node[w][:worker].active?
+          # end.map {|w| DCell::Node[w][:worker].future(:init_superstep)}
+
+          step = @workers.map { |w| DCell::Node[w][:worker].future(:init_superstep)}
           step.map { |f| f.value }
+
       end
 
       def superstep
         init_superstep
-        step = @workers.select do |w|
-          DCell::Node[w][:worker].active?
-        end.map {|w| DCell::Node[w][:worker].future(:superstep)}
-
+        # step = @workers.select do |w|
+        #   DCell::Node[w][:worker].active?
+        # end.map {|w| DCell::Node[w][:worker].future(:superstep)}
+        debug "Executing superstep on workers"
+        step = @workers.map { |w| DCell::Node[w][:worker].future(:superstep)}
         step.map { |f| f.value }
+        debug "Finished executing superstep on workers"
       end
 
       def active_worker_count
-        @workers.select { |w| DCell::Node[w][:worker].active? }.size
+        # @workers.select { |w| DCell::Node[w][:worker].active? }.size
+        to_test = @workers.map { |w| DCell::Node[w][:worker].future(:active?)}
+        to_test.map { |f| f.value ? 1 : 0 }.reduce(:+)
       end
 
       def run_until_finished
@@ -240,7 +250,8 @@ module Elaine
 
          #  step.map { |f| f.value }
 
-          break if @workers.select { |w| DCell::Node[w][:worker].active? }.size.zero?
+          # break if @workers.select { |w| DCell::Node[w][:worker].active? }.size.zero?
+          break if active_worker_count.zero?
         end
         debug "Job finished!"
       end

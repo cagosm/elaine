@@ -27,10 +27,13 @@ module Elaine
         @mailboxes = Hash.new
         # @message_queue = []
         @outbox = Hash.new
+        @outbox2 = []
         zipcodes.each_value do |v|
           debug "Initializing outbox for #{v}"
           @outbox[v] = []
         end
+
+        Celluloid::Actor[:worker].set_zipcodes(zipcodes)
 
 
         # @message_queue = []
@@ -85,12 +88,14 @@ module Elaine
         @outbox[node.id] ||= []
         @outbox[node.id].push({to: to, msg: msg})
         # @outbox2.push({to: to, msg: msg})
+        # @outbox2.push({to: to, msg: msg})
 
         # check to see if we should do a bulk delivery...
         if @outbox[node.id].size >= @out_box_buffer_size
           to_deliver = @outbox[node.id].shift @out_box_buffer_size
           deliver_bulk node.id, to_deliver
         end
+
         # if @outbox2.size >= @out_box_buffer_size
         #   debug "outbox buffer size reached #{@outbox2.size}/#{@out_box_buffer_size}"
         #   msgs = @outbox2.shift(@out_box_buffer_size)
@@ -151,7 +156,8 @@ module Elaine
         s = n[:postoffice]
         debug "worker: #{s}"
         raise "No worker service for #{destination_node_address}" if s.nil?
-        s.async.receive_bulk(msgs)
+        # s.async.receive_bulk(msgs)
+        s.receive_bulk(msgs)
         msgs.size
       end
 
