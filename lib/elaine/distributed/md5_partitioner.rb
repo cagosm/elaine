@@ -1,11 +1,14 @@
 require 'digest/md5'
 
-require 'logger'
+# require 'logger'
+
+require 'celluloid'
 
 module Elaine
   module Distributed
     # this might serve better as a module that gets included?
     class MD5Partitioner
+      # include Celluloid::Logger
 
       def self.key(v)
         d = Digest::MD5.hexdigest(v.to_s)
@@ -16,13 +19,13 @@ module Elaine
       end
 
       def self.partition(vals, num_partitions)
-        logger = Logger.new(STDERR)
+        # logger = Logger.new(STDERR)
 
         partitions = Array.new(num_partitions)
 
 
         # this is a really poor implementation....
-        logger.debug "Finding partition sizes..."
+        # debug "Finding partition sizes..."
         vals.each_with_index do |v, idx|
           partition = idx % num_partitions
           
@@ -41,13 +44,13 @@ module Elaine
         max_val = nil
         # vals.map { |t| key(t)}.sort.each do |v|
         tmp_vals = []
-        logger.debug "Building keys..."
+        # debug "Building keys..."
         vals.each do |t|
           tmp_vals << key(t)
         end
 
         tmp_vals.sort!
-        logger.debug "Adding to partitions"
+        # debug "Adding to partitions"
         tmp_vals.each do |v|
           # logger.debug "local_count: #{local_count}"
           # logger.debug "size of partition for partition number #{partition_num}: #{partitions[partition_num]}"
