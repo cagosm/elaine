@@ -1,7 +1,7 @@
-require 'instruments_helper'
-require 'elaine/instruments'
+require 'instrument/helpers/instruments_helper'
+require 'elaine/instrument'
 
-describe Elaine::Instruments::Instrument do
+describe Elaine::Instrument do
 
   before(:each) do
     InstrumentCoordinator.start
@@ -44,15 +44,19 @@ describe Elaine::Instruments::Instrument do
     ]
   end
 
-  it "should import the the measure method" do
+  it "should make the instrumented? method be true" do
     DCell::Node["test.elaine.coordinator"][:coordinator].instrumented?.should be_true
     # DCell::Node["test.elaine.coordinator"][:coordinator].i_exist?.should be_true
 
-    puts "setting graph"
-    DCell::Node["test.elaine.coordinator"][:coordinator].graph = graph
-    puts "done setting graph"
-    DCell::Node["test.elaine.coordinator"][:coordinator].partition
-    DCell::Node["test.elaine.coordinator"][:coordinator].run_job
+    # puts "setting graph"
+    # DCell::Node["test.elaine.coordinator"][:coordinator].graph = graph
+    # puts "done setting graph"
+    # DCell::Node["test.elaine.coordinator"][:coordinator].partition
+    # DCell::Node["test.elaine.coordinator"][:coordinator].run_job
+
+    # measurements = DCell::Node["test.elaine.coordinator"][:coordinator].instrument_measurements
+
+    # measurements[:supserstep].size.should == 30
 
 
 

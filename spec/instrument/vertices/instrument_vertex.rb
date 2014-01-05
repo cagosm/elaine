@@ -3,8 +3,8 @@ require 'elaine/distributed'
 class InstrumentVertex < Elaine::Distributed::Vertex
   def compute
     @value += 1
-    sleep(1.0)
-    vote_to_stop if @value >= 5
+    sleep(0.1)
+    vote_to_stop if @value > 5
     # # puts "Working on supserstep: #{superstep}"
     # if superstep >= 1
     #   # sum = messages.inject(0) {|total,msg| total += msg; total }

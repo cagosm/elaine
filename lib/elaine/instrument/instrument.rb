@@ -5,7 +5,7 @@ module Elaine
       class << self
         def included(klass)
           # @instrument_measurements = {}
-          puts "instrument included"
+          # puts "instrument included"
           # klass.send :extend, ClassMethods
           klass.send :include, InstanceMethods
 
@@ -31,7 +31,7 @@ module Elaine
 
         def enable_measurement(method)
           new_method = :"measure_#{method}"
-          puts "responds to #{method}: #{respond_to?(method)}, measure_#{method}: #{respond_to?(new_method)}"
+          # puts "responds to #{method}: #{respond_to?(method)}, measure_#{method}: #{respond_to?(new_method)}"
           raise "Unknown method to instrument: #{method}" unless respond_to? new_method 
           add_to_method(method, "measure_#{method}")
         end
@@ -42,7 +42,7 @@ module Elaine
 
         def add_to_method(original_method, new_method, &block)
           # return puts("fart")
-          puts "adding to method"
+          # puts "adding to method"
           uninstrumented_method_name = :"#{original_method}_without_instrumentation"
           instrumented_method_name = :"#{original_method}_with_#{new_method}"
           # instrumented_method_name = :"#{original_method}_with_"

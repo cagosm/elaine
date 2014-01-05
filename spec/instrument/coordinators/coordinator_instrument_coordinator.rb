@@ -1,18 +1,18 @@
 require 'elaine/distributed'
-require 'elaine/instruments'
-require 'elaine/instruments/benchmark_instrument'
+require 'elaine/instrument'
+require 'elaine/instrument/coordinator_instrument'
 
 module Elaine
   module Spec
 
-    class InstrumentCoordinator < Elaine::Distributed::Coordinator
+    class CoordinatorInstrumentCoordinator < Elaine::Distributed::Coordinator
       
-      include Elaine::Instruments::BenchmarkInstrument
+      include Elaine::Instrument::CoordinatorInstrument
 
       def run_job
 
         super
-        puts "benchmark: #{instrument_measurements}"
+        # puts "wassup?"
 
       end
 

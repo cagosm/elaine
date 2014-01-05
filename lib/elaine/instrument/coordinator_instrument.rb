@@ -1,14 +1,14 @@
 require 'benchmark'
 
 module Elaine
-  module Instruments
-    module BenchmarkInstrument
-      include Elaine::Instruments::Instrument
+  module Instrument
+    module CoordinatorInstrument
+      include Elaine::Instrument
       # extend Elaine::Instruments::Instrument
 
       class << self
         def included(klass)
-          puts "benchmark instrument included"
+          # puts "coordinator instrument included"
           klass.send :include, InstanceMethods
           # "puts extending class methods"
           # klass.send :extend, ClassMethods
@@ -79,6 +79,6 @@ module Elaine
     
       end
       # end
-    end # class BenchmarkInstrument
-  end # module Instruments
+    end # module CoordinatorInstrument
+  end # module Instrument
 end # module Elaine

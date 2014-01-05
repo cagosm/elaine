@@ -34,7 +34,7 @@ class InstrumentVertex; end
 module InstrumentCoordinator
   PORT = 8090
   def self.start
-    @@pid = Process.spawn Gem.ruby, File.expand_path("../instrument_coordinator_node.rb", __FILE__)
+    @@pid = Process.spawn Gem.ruby, File.expand_path("../../nodes/instrument_coordinator_node.rb", __FILE__)
     puts "Coordinator pid: #{@@pid}"
     unless @@pid
       STDERR.print "ERROR: Couldn't start test coordinator node"
@@ -81,7 +81,7 @@ end
 module InstrumentWorker1
   PORT = 8091
   def self.start
-    @pid = Process.spawn Gem.ruby, File.expand_path("../instrument_worker_node1.rb", __FILE__)
+    @pid = Process.spawn Gem.ruby, File.expand_path("../../nodes/instrument_worker_node1.rb", __FILE__)
 
     unless @pid
       STDERR.print "ERROR: Couldn't start test worker node 1"
@@ -130,7 +130,7 @@ end
 module InstrumentWorker2
   PORT = 8092
   def self.start
-    @pid = Process.spawn Gem.ruby, File.expand_path("../instrument_worker_node2.rb", __FILE__)
+    @pid = Process.spawn Gem.ruby, File.expand_path("../../nodes/instrument_worker_node2.rb", __FILE__)
 
     unless @pid
       STDERR.print "ERROR: Couldn't start test worker node 2"
