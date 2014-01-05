@@ -268,6 +268,10 @@ module Elaine
         end.flatten
       end
 
+      def instrumented?
+        false
+      end
+
     end # class Coordinator
   end # module Distributed
 end # module Elaine
