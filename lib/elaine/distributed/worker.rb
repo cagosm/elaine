@@ -189,6 +189,7 @@ module Elaine
       end
 
       def superstep
+        @active = false
         active = @vertices2.select {|v| v.active?}
         debug "There are #{active.size} active vertices in this step"
 
@@ -202,6 +203,7 @@ module Elaine
         pmap(slices) do |s|
           s.each do |v|
             v.step
+            active! if v.active?
           end
         end
         
