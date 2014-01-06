@@ -166,6 +166,7 @@ module Elaine
 
       def receive_bulk(msgs)
         debug "Post office receiving bulk (#{msgs.size} messages)"
+        Celluloid::Actor[:worker].active! if msgs.size > 0
         msgs.each do |msg|
           # @mailboxes[msg[:to]] ||= []
           @mailboxes[msg[:to]].push msg[:msg]

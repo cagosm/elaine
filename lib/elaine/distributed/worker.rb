@@ -29,25 +29,17 @@ module Elaine
         @address_cache = {}
         @num_partitions = num_partitions
         @active_count = 0
+        @active = true
         # @postoffice = Elaine::Distributed::PostOffice.new
       end
 
+      def active!
+        debug "active! called"
+        @active = true
+      end
+
       def active?
-        # there are two ways a vertex can be active:
-        # 1) It's specifically active via the .active? method
-        # 2) It has messages in its mailbox
-        debug "Checking active status."
-        @vertices2.each do |v|
-          if v.active?
-            debug "Vertex #{v.id} was active."
-            return true
-          end
-          if Celluloid::Actor[:postoffice].messages?(v.id)
-            debug "Vertex #{v.id} had messages"
-            return true
-          end
-        end
-        false
+        @active
       end
 
       def set_zipcodes(zips)
@@ -108,166 +100,6 @@ module Elaine
         @outbox.push({to: to, msg: msg})
       end
 
-      # def zipcodes=(zipcodes)
-      #   # @postoffice.zipcodes = zipcodes
-      #   @zipcodes = zipcodes
-
-      #   # do we need to initialize all the mailboxes here?
-      #   # might be smart?
-      #   @mailboxes = Hash.new
-      #   # @message_queue = []
-      #   @outbox = Hash.new
-      #   zipcodes.each_value do |v|
-      #     debug "Initializing outbox for #{v}"
-      #     @outbox[v] = []
-      #   end
-
-
-      #   # @message_queue = []
-      #   # my_id = DCell.me.id
-      #   # @zipcodes.each_pair do |k, v|
-      #   #   if v == my_id
-      #   #     debug "Creating mailbox for: #{k}"
-      #   #     @mailboxes[k] = []
-      #   #   end
-      #   # end
-      # end
-
-      # def address(to)
-      #   @postoffice.address(to)
-      # end
-
-      # def deliver(to, msg)
-      #   # @postoffice.deliver(to, msg)
-      #   # return nil
-      #   # node = address(to)
-
-      #   # if node.id.eql?(DCell.me.id)
-      #   #   # debug "Delivering to mailbox: #{to}"
-      #   #   # @mailboxes[to] ||= []
-      #   #   # @mailboxes[to].push msg
-      #   #   # @message_queue << {to: to, msg: msg}
-
-      #   #   # debug "Done delivering to mailbox: #{to}"
-      #   #   nil
-      #   # else
-      #   #   # debug "Delivering message to remote mailbox: #{msg}"
-      #   #   node[:postoffice].async.deliver(to, msg)
-      #   #   # debug "Finished delivery remnote box: to #{node.id}"
-      #   #   nil
-      #   # end
-
-      #   # trying bulk delivery with a buffer...
-      #   # debug "to: #{to}"
-      #   # debug "destination node: #{node.id}"
-      #   # @outbox[node.id] ||= []
-      #   # @outbox[node.id].push({to: to, msg: msg})
-        
-      #   msg_to_deliver = {to: to, msg: msg}
-      #   debug "worker.deliver, msg: #{msg_to_deliver}"
-      #   @outbox2.push(msg_to_deliver)
-
-      #   # check to see if we should do a bulk delivery...
-      #   # if @outbox[node.id].size >= @out_box_buffer_size
-      #   #   to_deliver = @outbox[node.id].shift @out_box_buffer_size
-      #   #   deliver_bulk node.id, to_deliver
-      #   # end
-      #   if @outbox2.size >= @out_box_buffer_size
-      #     info "outbox buffer size reached #{@outbox2.size}/#{@out_box_buffer_size}"
-      #     msgs = @outbox2.shift(@out_box_buffer_size)
-      #     # deliver_bulk2 to_deliver
-
-      #     to_deliver = {}
-      #     msgs.each do |m|
-      #       # node = address(m[:to])
-      #       hid = @partitioner.key(m[:to])
-      #       dest = @zipcodes.keys.select { |k| k.include?(hid) }.first
-      #       # debug "destination node: #{dest}"
-      #       # to_deliver[node.id] ||= []
-      #       # to_deliver[node.id] << m
-            
-      #       debug "to: #{m[:to]}"
-      #       debug "destination node: #{@zipcodes[dest]}"
-
-      #       to_deliver[@zipcodes[dest]] ||= []
-      #       to_deliver[@zipcodes[dest]] << m
-      #     end
-
-      #     to_deliver.each_pair do |k, v|
-      #       deliver_bulk(k, v)
-      #     end
-
-      #   end
-
-      #   nil
-      # end
-
-      # def deliver_bulk(destination_node_address, msgs)
-      #   debug "delivering bulk to: #{destination_node_address}"
-      #   n = DCell::Node[destination_node_address]
-
-      #   debug "node: #{n}"
-      #   s = n[:worker]
-      #   debug "worker: #{s}"
-      #   raise "No worker service for #{destination_node_address}" if s.nil?
-      #   s.async.receive_bulk(msgs)
-      #   msgs.size
-      # end
-
-      # def receive_bulk(msgs)
-      #   msgs.each do |msg|
-      #     @mailboxes[msg[:to]] ||= []
-      #     @mailboxes[msg[:to]].push msg[:msg]
-      #   end
-      #   msgs.size
-      # end
-
-      # def read(mailbox)
-      #   node = address(mailbox)
-      #   if node.id.eql?(Dcell.me.id)
-      #     @mailboxes[mailbox].map { |v| v }
-      #   else
-      #     node[:worker].read mailbox
-      #   end
-      # end
-
-      # def bulk_read_all(mailboxes)
-      #   debug "Bulk reading #{mailboxes.size} mailboxes"
-      #   ret = {}
-      #   mailboxes.each do |mailbox|
-      #     # node = address(mailbox)
-      #     # if node.id.eql?(DCell.me.id)
-      #       @mailboxes[mailbox] ||= []
-      #       msgs = Array.new(@mailboxes[mailbox])
-      #       @mailboxes[mailbox].clear # .shift(@mailboxes[mailbox].size)
-      #       ret[mailbox] = msgs
-      #     # end
-      #   end
-
-      #   ret
-
-      # end
-
-      # def read_all(mailbox)
-      #   node = address(mailbox)
-      #   # debug "node: #{node}"
-      #   # debug "node.id: '#{node.id}'"
-      #   # debug "DCell.me.id: '#{DCell.me.id}'"
-      #   if node.id.eql?(DCell.me.id)
-      #     @mailboxes[mailbox] ||= []
-      #     msgs = @mailboxes[mailbox].shift(@mailboxes[mailbox].size) #.map { |v| v }
-      #     # @mailboxes[mailbox].clear
-      #     msgs
-      #     # msgs = @message_queue.select { |v| v[:to] == mailbox }
-      #     # @message_queue.delete_if { |v| v[:to] == mailbox }
-      #     # msgs
-      #   else
-      #     raise "Can't destructively read a non-local mailbox! (#{mailbox} on #{DCell.me.id}"
-      #   end
-      # end
-
-
-
       def add_vertices(vs)
         debug "Adding #{vs.size} vertices..."
         counter = 0
@@ -325,6 +157,7 @@ module Elaine
       # HACK this should be handled better...
       def init_superstep
         debug "Starting init_superstep"
+        @active = false
         counter = 0
         @vertices2.each_slice(5_000) do |slice|
 
@@ -340,6 +173,7 @@ module Elaine
           slice.each do |v|
             v.messages = boxes[v.id]
             v.active! if v.messages.size > 0
+            active! if v.active?
           end
         end
         debug "#{DCell.me.id} finished init_superstep"
