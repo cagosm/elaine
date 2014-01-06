@@ -223,7 +223,7 @@ module Elaine
       protected
 
       def address(to)
-        start_time = Time.now.to_i
+        # start_time = Time.now.to_i
       # if !@address_cache[to]
         dest = @zipcodes.keys.select { |k| k.include?(@partitioner.key(to)) }
         if dest.size != 1
@@ -234,8 +234,8 @@ module Elaine
           end
         end
         # @address_cache[to] = dest.first
-          end_time = Time.now.to_i
-          debug "address(#{to}) took #{end_time - start_time} seconds."
+          # end_time = Time.now.to_i
+          # debug "address(#{to}) took #{end_time - start_time} seconds."
           d = dest.first
           # debug "Addres cache size: #{@address_cache.size}"
         # end

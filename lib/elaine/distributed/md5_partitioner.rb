@@ -18,6 +18,9 @@ module Elaine
 
       end
 
+      # Creates graph partitions
+      # @param vals [Enumerable] - An Enumerable of vertex ids in the graph to partition
+      # @param num_partitions [Numeric] - The number of partitions to create
       def self.partition(vals, num_partitions)
         # logger = Logger.new(STDERR)
 

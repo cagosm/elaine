@@ -8,8 +8,8 @@ module Elaine
       include Celluloid::Logger
 
       attr_reader :vertices, :active, :vertices2
-
-
+      attr_accessor :graph_size
+      
       def initialize(coordinator_node: "elaine.coordinator", g: [], zipcodes: {}, stop_condition: Celluloid::Condition.new, partitioner: Elaine::Distributed::MD5Partitioner, out_box_buffer_size: 10_000, num_partitions: 3)
 
         # @coordinator_node = DCell::Node["elaine.coordinator"]

@@ -1,4 +1,5 @@
 require 'benchmark'
+require 'elaine/instrument'
 
 module Elaine
   module Instrument
