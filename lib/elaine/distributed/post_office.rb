@@ -82,6 +82,7 @@ module Elaine
         if node.id == DCell.me.id
           debug "Delivering local message to #{to}"
           @mailboxes[to].push(msg)
+          Celluloid::Actor[:worker].active!
           return nil
         end
 
@@ -154,8 +155,8 @@ module Elaine
 
         debug "node: #{n}"
         s = n[:postoffice]
-        debug "worker: #{s}"
-        raise "No worker service for #{destination_node_address}" if s.nil?
+        debug "postoffice: #{s}"
+        raise "No postoffice service for #{destination_node_address}" if s.nil?
         # s.async.receive_bulk(msgs)
         s.receive_bulk(msgs)
         msgs.size
