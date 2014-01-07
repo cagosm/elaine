@@ -176,6 +176,7 @@ module Elaine
             active! if v.active?
           end
         end
+        Celluloid::Actor[:postoffice].init_superstep
         debug "#{DCell.me.id} finished init_superstep"
       end
 
@@ -190,6 +191,10 @@ module Elaine
 
       def superstep
         @active = false
+        # might improve performance not to bother with this active check
+        # here and just loop through all vertices and execute if they are active
+        # not sure how it will interact with threads, could end up being a
+        # thread that has no active vertices...
         active = @vertices2.select {|v| v.active?}
         debug "There are #{active.size} active vertices in this step"
 

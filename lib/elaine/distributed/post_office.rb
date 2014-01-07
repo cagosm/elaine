@@ -17,6 +17,11 @@ module Elaine
         @outbox2 = []
         @out_box_buffer_size = out_box_buffer_size
         @address_cache = {}
+        @sent_active = false
+      end
+
+      def init_superstep
+        @sent_active = false
       end
 
       def zipcodes=(zipcodes)
@@ -82,7 +87,11 @@ module Elaine
         if node.id == DCell.me.id
           debug "Delivering local message to #{to}"
           @mailboxes[to].push(msg)
-          Celluloid::Actor[:worker].active!
+          # if !@sent_active
+            Celluloid::Actor[:worker].active!
+            # @sent_active = true
+          # end
+          
           return nil
         end
 
@@ -166,7 +175,12 @@ module Elaine
 
       def receive_bulk(msgs)
         debug "Post office receiving bulk (#{msgs.size} messages)"
-        Celluloid::Actor[:worker].active! if msgs.size > 0
+        # if !@sent_active && msgs.size > 0
+        if msgs.size > 0
+          Celluloid::Actor[:worker].active!
+          # @sent_active = true
+        end
+        
         msgs.each do |msg|
           # @mailboxes[msg[:to]] ||= []
           @mailboxes[msg[:to]].push msg[:msg]
