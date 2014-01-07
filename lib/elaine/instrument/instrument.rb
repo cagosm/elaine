@@ -4,12 +4,7 @@ module Elaine
 
       class << self
         def included(klass)
-          # @instrument_measurements = {}
-          # puts "instrument included"
-          # klass.send :extend, ClassMethods
           klass.send :include, InstanceMethods
-
-          # @instrument_measurements = {}
         end
       end
 
@@ -31,7 +26,6 @@ module Elaine
 
         def enable_measurement(method)
           new_method = :"measure_#{method}"
-          # puts "responds to #{method}: #{respond_to?(method)}, measure_#{method}: #{respond_to?(new_method)}"
           raise "Unknown method to instrument: #{method}" unless respond_to? new_method 
           add_to_method(method, "measure_#{method}")
         end
@@ -41,24 +35,17 @@ module Elaine
         end
 
         def add_to_method(original_method, new_method, &block)
-          # return puts("fart")
-          # puts "adding to method"
+
           uninstrumented_method_name = :"#{original_method}_without_instrumentation"
           instrumented_method_name = :"#{original_method}_with_#{new_method}"
-          # instrumented_method_name = :"#{original_method}_with_"
+
 
           raise ArgumentError, "already instrumented #{original_method} for #{name}" if respond_to? instrumented_method_name
           raise ArgumentError, "could not find method #{original_method} for #{name}" unless respond_to?(original_method) || private_method_defined?(original_method)
 
-          # send(original_method)
-
           self.singleton_class.send :alias_method, uninstrumented_method_name, original_method
           self.singleton_class.send(:define_method, instrumented_method_name) do |*args, &block|
-            # measure("#{original_method}") do
-              # puts "sending: #{instrumented_method_name}"
-              send(new_method, uninstrumented_method_name, *args, &block)
-              # send(original_method, *args, &block) 
-            # end
+            send(new_method, uninstrumented_method_name, *args, &block)
           end
           self.singleton_class.send :alias_method, original_method, instrumented_method_name
         end

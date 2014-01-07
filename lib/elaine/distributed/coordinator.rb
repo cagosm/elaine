@@ -7,6 +7,7 @@ module Elaine
   module Distributed
     class Coordinator
       include Celluloid
+      include Celluloid::FSM
       include Celluloid::Logger
       # include Elaine::Instruments::Instrument
       # finalizer :shutdown
@@ -14,8 +15,9 @@ module Elaine
       attr_reader :workers
       attr_reader :partitions
       attr_reader :num_partitions
+      
 
-      def initialize(graph: nil, num_partitions: 1, stop_condition: Celluloid::Condition.new, partitioner: Elaine::Distributed::MD5Partitioner)
+      def initialize(graph: nil, num_partitions: 1, stop_condition: Celluloid::Condition.new, finished_condition: Celluloid::Condition.new, partitioner: Elaine::Distributed::MD5Partitioner)
         @workers = []
         @num_partitions = num_partitions
         @graph = graph
@@ -24,7 +26,15 @@ module Elaine
         @stop_condition = stop_condition
         @partitioner = partitioner
         @zipcodes = zipcodes
+        @finished_condition = finished_condition
         # @instrument = instrument
+
+        # to deal with weird inheritence stuff...
+        self.class.default_state :waiting
+        self.class.state :waiting, to: [:running]
+        self.class.state :running, to: [:finished]
+        self.class.state :finished
+        attach self
       end
 
 
@@ -256,8 +266,22 @@ module Elaine
         debug "Job finished!"
       end
 
+      def start_job
+        transition :running
+        run_job
+        transition :finished
+      end
+
       def run_job
         run_until_finished
+      end
+
+      def finish!
+        transition :finished
+        @workers.each do |w|
+          DCell::Node[w][:worker].finish!
+        end
+        @finished_condition.signal(true)
       end
 
       def stop

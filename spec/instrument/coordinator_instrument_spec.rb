@@ -1,9 +1,10 @@
 require 'instrument/helpers/coordinator_instruments_helper'
 require 'elaine/instrument'
+require 'elaine/instrument/coordinator_instrument'
 
 
 
-describe Elaine::Instrument do
+describe Elaine::Instrument::CoordinatorInstrument do
 
   before(:each) do
     CoordinatorInstrumentCoordinator.start

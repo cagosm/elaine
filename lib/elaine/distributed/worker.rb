@@ -1,4 +1,5 @@
 require 'dcell'
+require 'celluloid/fsm'
 require 'digest/md5'
 
 module Elaine
@@ -6,12 +7,16 @@ module Elaine
     class Worker
       include Celluloid
       include Celluloid::Logger
+      include Celluloid::FSM
+      
+
 
       attr_reader :vertices, :active, :vertices2
       attr_accessor :graph_size
-      
-      def initialize(coordinator_node: "elaine.coordinator", g: [], zipcodes: {}, stop_condition: Celluloid::Condition.new, partitioner: Elaine::Distributed::MD5Partitioner, out_box_buffer_size: 10_000, num_partitions: 3)
 
+
+      def initialize(coordinator_node: "elaine.coordinator", g: [], zipcodes: {}, stop_condition: Celluloid::Condition.new, partitioner: Elaine::Distributed::MD5Partitioner, out_box_buffer_size: 10_000, num_partitions: 3)
+        # super(self)
         # @coordinator_node = DCell::Node["elaine.coordinator"]
         @coordinator_node = coordinator_node
         DCell::Node[@coordinator_node][:coordinator].register_worker DCell.me.id
@@ -31,6 +36,18 @@ module Elaine
         @active_count = 0
         @active = true
         # @postoffice = Elaine::Distributed::PostOffice.new
+
+        # to deal with weird inheritence stuff...
+        self.class.default_state :waiting
+        self.class.state :waiting, to: [:running]
+        self.class.state :running, to: [:finished]
+        self.class.state :finished
+        attach self
+
+        # puts "states: #{states}, current state: #{current_state}"
+        # puts "default state: #{default_state}"
+
+
       end
 
       def active!
@@ -40,6 +57,11 @@ module Elaine
 
       def active?
         @active
+      end
+
+
+      def instrumented?
+        false
       end
 
       def set_zipcodes(zips)
@@ -156,6 +178,11 @@ module Elaine
 
       # HACK this should be handled better...
       def init_superstep
+        
+        # puts "transitioning to running"
+        transition :running
+        # return
+        
         debug "Starting init_superstep"
         @active = false
         counter = 0
@@ -282,6 +309,10 @@ module Elaine
 
       def vertex_values
         @vertices2.map { |v| {id: v.id, value: v.value} }
+      end
+
+      def finish!
+        transition :finished
       end
 
       protected
