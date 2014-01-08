@@ -17,7 +17,7 @@ module Elaine
       attr_reader :num_partitions
       
 
-      def initialize(graph: nil, num_partitions: 1, stop_condition: Celluloid::Condition.new, finished_condition: Celluloid::Condition.new, partitioner: Elaine::Distributed::MD5Partitioner)
+      def initialize(graph: nil, num_partitions: 1, stop_condition: Celluloid::Condition.new, finished_condition: Celluloid::Condition.new, partitioner: Elaine::Distributed::MD5Partitioner, graph_size: 0)
         @workers = []
         @num_partitions = num_partitions
         @graph = graph
@@ -27,6 +27,7 @@ module Elaine
         @partitioner = partitioner
         @zipcodes = zipcodes
         @finished_condition = finished_condition
+        @graph_size = graph_size
         # @instrument = instrument
 
         # to deal with weird inheritence stuff...
