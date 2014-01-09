@@ -1,4 +1,5 @@
 require 'dcell'
+require 'zlib'
 
 module Elaine
   module Distributed
@@ -18,6 +19,10 @@ module Elaine
         @out_box_buffer_size = out_box_buffer_size
         @address_cache = {}
         @sent_active = false
+      end
+
+      def instrumented?
+        false
       end
 
       def init_superstep
@@ -85,13 +90,7 @@ module Elaine
         # debug "destination node: #{node.id}"
 
         if node.id == DCell.me.id
-          debug "Delivering local message to #{to}"
-          @mailboxes[to].push(msg)
-          # if !@sent_active
-            Celluloid::Actor[:worker].active!
-            # @sent_active = true
-          # end
-          
+          deliver_local(to, msg)
           return nil
         end
 
@@ -167,13 +166,15 @@ module Elaine
         debug "postoffice: #{s}"
         raise "No postoffice service for #{destination_node_address}" if s.nil?
         # s.async.receive_bulk(msgs)
-        s.receive_bulk(msgs)
+        compressed_messages = Zlib::Deflate.deflate(Marshal.dump(msgs))
+        s.receive_bulk(compressed_messages)
         msgs.size
       end
 
 
 
-      def receive_bulk(msgs)
+      def receive_bulk(compressed_msgs)
+        msgs = Marshal.load(Zlib::Inflate.inflate(compressed_msgs))
         debug "Post office receiving bulk (#{msgs.size} messages)"
         # if !@sent_active && msgs.size > 0
         if msgs.size > 0
@@ -237,6 +238,12 @@ module Elaine
       end
 
       protected
+
+      def deliver_local(to, msg)
+        debug "Delivering local message to #{to}"
+        @mailboxes[to].push(msg)
+        Celluloid::Actor[:worker].active!
+      end
 
       def address(to)
         # start_time = Time.now.to_i
