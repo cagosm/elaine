@@ -8,6 +8,7 @@ load File.expand_path("../../coordinators/coordinator_instrument_coordinator.rb"
 # require 'test_add_vertex'
 
 load File.expand_path("../../vertices/instrument_vertex.rb", __FILE__)
+load File.expand_path("../../vertices/message_sender_vertex.rb", __FILE__)
 # load File.expand_path("../instrument_page_rank_vertex.rb", __FILE__)
 
 

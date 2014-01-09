@@ -18,7 +18,7 @@ module Elaine
 
       def initialize(*args)
         super(*args)
-        puts "instrumented? #{instrumented?}"
+        # puts "instrumented? #{instrumented?}"
         enable_measurement(:superstep)
       end
     end # class WorkerInstrumentWorker

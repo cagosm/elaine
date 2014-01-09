@@ -4,6 +4,7 @@ require 'dcell'
 require 'distributed_helper'
 
 class InstrumentVertex; end
+class MessageSenderVertex; end
 
 
 # DCell.start
