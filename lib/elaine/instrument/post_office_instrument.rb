@@ -80,6 +80,7 @@ module Elaine
         protected
 
         def basic_measurement(method_name, label, *args)
+          puts "RUNNING BASIC_MEASUREMENT!!!"
           v, measurement = measure(label) do 
             send(method_name, *args)
           end
