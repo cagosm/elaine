@@ -91,41 +91,11 @@ module Elaine
 
         if node.id == DCell.me.id
           deliver_local(to, msg)
-          return nil
+        else
+          deliver_remote(node.id, to, msg)
         end
 
-        @outbox[node.id] ||= []
-        @outbox[node.id].push({to: to, msg: msg})
-        # @outbox2.push({to: to, msg: msg})
-        # @outbox2.push({to: to, msg: msg})
-
-        # check to see if we should do a bulk delivery...
-        if @outbox[node.id].size >= @out_box_buffer_size
-          to_deliver = @outbox[node.id].shift @out_box_buffer_size
-          deliver_bulk node.id, to_deliver
-        end
-
-        # if @outbox2.size >= @out_box_buffer_size
-        #   debug "outbox buffer size reached #{@outbox2.size}/#{@out_box_buffer_size}"
-        #   msgs = @outbox2.shift(@out_box_buffer_size)
-        #   # deliver_bulk2 to_deliver
-
-        #   to_deliver = {}
-        #   msgs.each do |m|
-        #     node = address(m[:to])
-        #     debug "to: #{m[:to]}"
-        #     debug "destination node: #{node.id}"
-        #     to_deliver[node.id] ||= []
-        #     to_deliver[node.id] << m
-        #   end
-
-        #   to_deliver.each_pair do |k, v|
-        #     deliver_bulk(k, v)
-        #   end
-
-        # end
-
-        nil
+        
       end
 
       def deliver_all
@@ -243,6 +213,20 @@ module Elaine
         debug "Delivering local message to #{to}"
         @mailboxes[to].push(msg)
         Celluloid::Actor[:worker].active!
+        nil
+      end
+
+      def deliver_remote(node, to, msg)
+        @outbox[node] ||= []
+        @outbox[node].push({to: to, msg: msg})
+        
+        # check to see if we should do a bulk delivery...
+        if @outbox[node].size >= @out_box_buffer_size
+          to_deliver = @outbox[node].shift @out_box_buffer_size
+          deliver_bulk node, to_deliver
+        end
+
+        nil
       end
 
       def address(to)

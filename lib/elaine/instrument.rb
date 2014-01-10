@@ -30,7 +30,6 @@ module Elaine
       end
 
       def enable_measurement(method)
-        puts "enabling measurement for: #{method}"
         new_method = :"measure_#{method}"
         # puts "responds to #{method}: #{respond_to?(method)}, measure_#{method}: #{respond_to?(new_method)}"
         raise "Unknown method to instrument: #{method}" unless respond_to? new_method 

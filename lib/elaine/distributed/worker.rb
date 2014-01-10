@@ -94,34 +94,6 @@ module Elaine
         node
       end
 
-      def deliver_all
-        # debug "outbox buffer size reached #{@outbox2.size}/#{@out_box_buffer_size}"
-        # msgs = @outbox2.shift(@out_box_buffer_size)
-        # deliver_bulk2 to_deliver
-
-        # msgs = Array.new(@outbox)
-
-        to_deliver = {}
-        @outbox.each do |m|
-          raise "Message was nil!" if m.nil?
-          node = address(m[:to])
-          debug "to: #{m[:to]}"
-          debug "destination node: #{node.id}"
-          to_deliver[node.id] ||= []
-          to_deliver[node.id] << m
-        end
-
-        to_deliver.each_pair do |k, v|
-          Celluloid::Actor[:postoffice].deliver_bulk(k, v)
-        end
-        @outbox.clear
-      end
-
-      def deliver(to, msg)
-        debug "worker#deliver(#{to}, #{msg})"
-        @outbox.push({to: to, msg: msg})
-      end
-
       def add_vertices(vs)
         debug "Adding #{vs.size} vertices..."
         counter = 0

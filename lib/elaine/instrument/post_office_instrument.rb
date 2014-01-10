@@ -16,29 +16,7 @@ module Elaine
       module InstanceMethods
 
         def measure_deliver(method_name, *args)
-          # puts "the fucK?"
           basic_measurement(method_name, "deliver", *args)
-          # v, measurement = measure("deliver") do 
-          #   send(method_name, *args)
-          # end
-
-          # instrument_measurements["deliver"] ||= {total_time: 0.0, count: 0, min_time: Float::INFINITY, max_time: 0.0, avg_time: 0.0}
-          # history = instrument_measurements["deliver"]
-          # history[:total_time] += measurement.real
-
-          # history[:count] += 1
-
-          # if measurement.real < history[:min_time]
-          #   history[:min_time] = measurement.real
-          # end
-
-          # if measurement.real > history[:max_time]
-          #   history[:max_time] = measurement.real
-          # end
-
-          # history[:avg_time] = history[:total_time] / history[:count]
-
-          # v
         end
 
         def measure_deliver_local(method_name, *args)
@@ -52,35 +30,16 @@ module Elaine
 
         def measure_deliver_bulk(method_name, *args)
           basic_measurement(method_name, "deliver_bulk", *args)
-          # v, measurement = measure("deliver_bulk") do 
-          #   send(method_name, *args)
-          # end
+        end
 
-          # instrument_measurements["deliver_bulk"] ||= {total_time: 0.0, count: 0, min_time: Float::INFINITY, max_time: 0.0, avg_time: 0.0}
-          # history = instrument_measurements["deliver_bulk"]
-          # history[:total_time] += measurement.real
-
-          # history[:count] += 1
-
-          # if measurement.real < history[:min_time]
-          #   history[:min_time] = measurement.real
-          # end
-
-          # if measurement.real > history[:max_time]
-          #   history[:max_time] = measurement.real
-          # end
-
-          # history[:avg_time] = history[:total_time] / history[:count]
-
-          # v
+        def measure_deliver_remote(method_name, *args)
+          basic_measurement(method_name, "deliver_remote", *args)
         end
         
-        
-
         protected
 
         def basic_measurement(method_name, label, *args)
-          puts "RUNNING BASIC_MEASUREMENT!!!"
+
           v, measurement = measure(label) do 
             send(method_name, *args)
           end
