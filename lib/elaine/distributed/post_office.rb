@@ -15,10 +15,21 @@ module Elaine
         @zipcodes = Hash.new
         @partitioner = partitioner
         @outbox = {}
-        @outbox2 = []
         @out_box_buffer_size = out_box_buffer_size
         @address_cache = {}
+        @node_cache = {}
+        @post_office_cache = {}
         @sent_active = false
+        @active = true
+        @my_address = DCell.me.id
+      end
+
+      def active?
+        @active
+      end
+
+      def active!
+        @active = true
       end
 
       def instrumented?
@@ -27,6 +38,7 @@ module Elaine
 
       def init_superstep
         @sent_active = false
+        @active = false
       end
 
       def zipcodes=(zipcodes)
@@ -35,25 +47,13 @@ module Elaine
         # do we need to initialize all the mailboxes here?
         # might be smart?
         @mailboxes = Hash.new
-        # @message_queue = []
         @outbox = Hash.new
-        @outbox2 = []
         zipcodes.each_value do |v|
           debug "Initializing outbox for #{v}"
           @outbox[v] = []
         end
 
         Celluloid::Actor[:worker].set_zipcodes(zipcodes)
-
-
-        # @message_queue = []
-        # my_id = DCell.me.id
-        # @zipcodes.each_pair do |k, v|
-        #   if v == my_id
-        #     debug "Creating mailbox for: #{k}"
-        #     @mailboxes[k] = []
-        #   end
-        # end
 
       end
 
@@ -67,34 +67,14 @@ module Elaine
 
 
       def deliver(to, msg)
-        # return nil
-        node = address(to)
 
-        # if node.id.eql?(DCell.me.id)
-        #   # debug "Delivering to mailbox: #{to}"
-        #   # @mailboxes[to] ||= []
-        #   # @mailboxes[to].push msg
-        #   # @message_queue << {to: to, msg: msg}
+        node_address = address(to)
 
-        #   # debug "Done delivering to mailbox: #{to}"
-        #   nil
-        # else
-        #   # debug "Delivering message to remote mailbox: #{msg}"
-        #   node[:postoffice].async.deliver(to, msg)
-        #   # debug "Finished delivery remnote box: to #{node.id}"
-        #   nil
-        # end
-
-        # trying bulk delivery with a buffer...
-        # debug "to: #{to}"
-        # debug "destination node: #{node.id}"
-
-        if node.id == DCell.me.id
+        if node_address == @my_address
           deliver_local(to, msg)
         else
-          deliver_remote(node.id, to, msg)
+          deliver_remote(node_address, to, msg)
         end
-
         
       end
 
@@ -107,37 +87,17 @@ module Elaine
         end
         @outbox.each_value { |v| v.clear }
 
-        # msgs = Array.new(@outbox2)
-        #  #.shift(@out_box_buffer_size)
-        #   # deliver_bulk2 to_deliver
-
-        # to_deliver = {}
-        # msgs.each do |m|
-        #   debug "deliver_all m: #{m}"
-        #   node = address(m[:to])
-        #   debug "destination node: #{node.id}"
-        #   to_deliver[node.id] ||= []
-        #   to_deliver[node.id] << m
-        # end
-
-        # to_deliver.each_pair do |k, v|
-        #   deliver_bulk(k, v)
-        # end
-
-        # @outbox2.clear
       end
 
       def deliver_bulk(destination_node_address, msgs)
         debug "delivering bulk to: #{destination_node_address}"
-        n = DCell::Node[destination_node_address]
-
-        debug "node: #{n}"
-        s = n[:postoffice]
+       
+        s = DCell::Node[destination_node_address][:postoffice]
         debug "postoffice: #{s}"
         raise "No postoffice service for #{destination_node_address}" if s.nil?
-        # s.async.receive_bulk(msgs)
         compressed_messages = Zlib::Deflate.deflate(Marshal.dump(msgs))
-        s.receive_bulk(compressed_messages)
+        s.active!
+        s.async.receive_bulk(compressed_messages)
         msgs.size
       end
 
@@ -146,22 +106,20 @@ module Elaine
       def receive_bulk(compressed_msgs)
         msgs = Marshal.load(Zlib::Inflate.inflate(compressed_msgs))
         debug "Post office receiving bulk (#{msgs.size} messages)"
-        # if !@sent_active && msgs.size > 0
+        
         if msgs.size > 0
-          Celluloid::Actor[:worker].active!
-          # @sent_active = true
+          active!
         end
         
         msgs.each do |msg|
-          # @mailboxes[msg[:to]] ||= []
-          @mailboxes[msg[:to]].push msg[:msg]
+          @mailboxes[msg[:to]] << msg[:msg]
         end
         msgs.size
       end
 
       def read(mailbox)
         node = address(mailbox)
-        if node.id.eql?(Dcell.me.id)
+        if node.id.eql?(@my_address)
           @mailboxes[mailbox].map { |v| v }
         else
           node[:postoffice].read mailbox
@@ -171,14 +129,12 @@ module Elaine
       def bulk_read_all(mailboxes)
         debug "Bulk reading #{mailboxes.size} mailboxes"
         ret = {}
+
         mailboxes.each do |mailbox|
-          # node = address(mailbox)
-          # if node.id.eql?(DCell.me.id)
-            @mailboxes[mailbox] ||= []
-            msgs = Array.new(@mailboxes[mailbox])
-            @mailboxes[mailbox].clear # .shift(@mailboxes[mailbox].size)
-            ret[mailbox] = msgs
-          # end
+          @mailboxes[mailbox] ||= []
+          msgs = Array.new(@mailboxes[mailbox])
+          @mailboxes[mailbox].clear # .shift(@mailboxes[mailbox].size)
+          ret[mailbox] = msgs
         end
 
         ret
@@ -187,19 +143,15 @@ module Elaine
 
       def read_all(mailbox)
         node = address(mailbox)
-        # debug "node: #{node}"
-        # debug "node.id: '#{node.id}'"
-        # debug "DCell.me.id: '#{DCell.me.id}'"
-        if node.id.eql?(DCell.me.id)
+       
+        if node.id.eql?(@my_address)
           @mailboxes[mailbox] ||= []
           msgs = @mailboxes[mailbox].shift(@mailboxes[mailbox].size) #.map { |v| v }
-          # @mailboxes[mailbox].clear
+          
           msgs
-          # msgs = @message_queue.select { |v| v[:to] == mailbox }
-          # @message_queue.delete_if { |v| v[:to] == mailbox }
-          # msgs
+          
         else
-          raise "Can't destructively read a non-local mailbox! (#{mailbox} on #{DCell.me.id}"
+          raise "Can't destructively read a non-local mailbox! (#{mailbox} on #{@my_address}"
         end
       end
 
@@ -211,48 +163,42 @@ module Elaine
 
       def deliver_local(to, msg)
         debug "Delivering local message to #{to}"
-        @mailboxes[to].push(msg)
-        Celluloid::Actor[:worker].active!
+        @mailboxes[to] << msg
+        active!
         nil
       end
 
-      def deliver_remote(node, to, msg)
-        @outbox[node] ||= []
-        @outbox[node].push({to: to, msg: msg})
+      def deliver_remote(node_address, to, msg)
+        @outbox[node_address] ||= []
+        @outbox[node_address] << {to: to, msg: msg}
         
         # check to see if we should do a bulk delivery...
-        if @outbox[node].size >= @out_box_buffer_size
-          to_deliver = @outbox[node].shift @out_box_buffer_size
-          deliver_bulk node, to_deliver
+        if @outbox[node_address].size >= @out_box_buffer_size
+          to_deliver = @outbox[node_address].shift @out_box_buffer_size
+          deliver_bulk node_address, to_deliver
         end
 
         nil
       end
 
       def address(to)
-        # start_time = Time.now.to_i
-      # if !@address_cache[to]
-        dest = @zipcodes.keys.select { |k| k.include?(@partitioner.key(to)) }
-        if dest.size != 1
-          if dest.size > 1
-            raise "There were multiple destinations (#{dest.size}) found for node: #{to}"
-          else
-            raise "There was no destination found for node: #{to}"
+        if @address_cache[to].nil?
+          dest = @zipcodes.keys.select { |k| k.include?(@partitioner.key(to)) }
+          if dest.size != 1
+            if dest.size > 1
+              raise "There were multiple destinations (#{dest.size}) found for node: #{to}"
+            else
+              raise "There was no destination found for node: #{to}"
+            end
           end
-        end
-        # @address_cache[to] = dest.first
-          # end_time = Time.now.to_i
-          # debug "address(#{to}) took #{end_time - start_time} seconds."
           d = dest.first
-          # debug "Addres cache size: #{@address_cache.size}"
-        # end
+          node_address = @zipcodes[d]
+          raise "Destination node (key: #{d}, node: #{@zipcodes[d]}) was nil!" if node_address.nil?
 
-
-        # node = DCell::Node[@zipcodes[@address_cache[to]]]
-        node = DCell::Node[@zipcodes[d]]
-        # debug "Address is: #{zipcodes[dest.first]}"
-        raise "Destination node (key: #{d}, node: #{@zipcodes[d]}) was nil!" if node.nil?
-        node
+          @address_cache[to] = node_address
+        end
+        @address_cache[to]
+       
       end
 
     end # class PostOffice

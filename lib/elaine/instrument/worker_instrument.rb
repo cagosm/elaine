@@ -50,6 +50,7 @@ module Elaine
         end
 
       end # module InstanceMethods
+      
     end # module WorkerInstrument
   end # module Instrument
 end # module Elaine

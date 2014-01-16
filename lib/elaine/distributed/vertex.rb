@@ -36,20 +36,11 @@ module Elaine
       end
 
       def deliver(to, msg)
-        # @out_message_queue << {to: to, msg: msg}
-        # if @out_message_queue.size >= 100
-        #   to_deliver = @out_message_queue.shift(100)
-        #   @postoffice.deliver_multiple(to_deliver)
-        # end
-
-        # @out_message_queue.size
         @postoffice.deliver(to, msg)
-        
       end
 
       def step
         @superstep += 1
-        # debug "Running super step ##{@superstep}"
         compute
       end
 
@@ -63,6 +54,7 @@ module Elaine
       def vote_to_stop; @active = false; end
 
       def compute; end
+      
     end # class Vertex
   end # module Distributed
 end # module Elaine

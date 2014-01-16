@@ -79,31 +79,6 @@ module Elaine
 
         raise "Still #{remainder.size} vertices left to distribute!" if remainder.size > 0
 
-
-
-        # slice_size = (@graph.size / 50).to_i
-        # slice_size = 1 if slice_size < 1
-        # slices = @graph.each_slice(slice_size)
-        # pmap(slices) do |slice|
-        #   slice.each do |v|
-        #     vertex_key = @partitioner.key(v[:id])
-        #     worker_node = zips.select { |k, v| k.include? vertex_key }
-        #     if worker_node.size != 1
-        #       raise "Bad worker node size: #{worker_node.size}"
-        #     end
-        #     worker_node = worker_node.first[1]
-        #     DCell::Node[worker_node][:worker].add_vertex v
-        #   end
-        # end
-        # @graph.each do |v|
-        #   vertex_key = @partitioner.key(v[:id])
-        #   worker_node = zips.select { |k, v| k.include? vertex_key }
-        #   if worker_node.size != 1
-        #     raise "Bad worker node size: #{worker_node.size}"
-        #   end
-        #   worker_node = worker_node.first[1]
-        #   DCell::Node[worker_node][:worker].add_vertex v
-        # end
         @graph.size
       end
 
@@ -113,11 +88,10 @@ module Elaine
       end
 
       def init_job
-        # zipcodes = {}
+        
         debug "partitioning"
         partition
-        # debug "Partitions: #{@partitions}"
-
+        
         # distribute the zipcodes
         debug "building zipcodes"
         zips = zipcodes
@@ -133,55 +107,10 @@ module Elaine
         debug "distributing graph"
         distribute_graph zips
         debug "done distributing graph"
-        # @partitions.each_pair do |worker_node, vertices|
-        #   debug "Sending vertex #{v} to: #{worker_node}"
-        #   # DCell::Node[worker_node][:worker].init_graph vertices
-        # end
-
-        # TODO This needs to be dealt with differently if we are loading
-        # the graph from a remote location (i.e., not sending the graph to each
-        # worker)
-        # @graph.each do |vertex|
-        #   vertex_key = @partitioner.key(vertex[:id])
-        #   # zips.each_pair do |k, v|
-
-        #   # end
-        #   # debug "zips: #{zips}"
-        #   worker_node = zips.select { |k, v| k.include? vertex_key }
-
-        #   if worker_node.size != 1
-        #     raise "Bad worker node size: #{worker_node.size}"
-        #   end
-
-        #   worker_node = worker_node.first[1]
-
-        #   DCell::Node[worker_node][:worker].add_vertex vertex
-        # end
       end
 
       def partition
-        # # not sure if we should re-initialize or not
-        # @partitions = Hash.new
-
-        # # size = (@graph.size.to_f / workers.size).ceil
-
-        # # @graph.each_slice(size).with_index do |slice, index|
-        # #   @partitions[@workers[index]] = slice
-        # # end
-
-        # # trying a slow partitioning to check a bug...
-        # debug "running slow partitioner..."
-
-        # @graph.each_with_index do |v, idx|
-        #   worker_node = idx % @workers.size
-        #   @partitions[@workers[worker_node]] ||= []
-        #   @partitions[@workers[worker_node]] << v
-        # end
-
-        # debug "done running slow partitioner:"
-        # @partitions.each_pair do |k, v|
-        #   debug "#{k}: #{v.size}"
-        # end
+       
         debug "running partitioner: #{@partitioner}"
         tmp_partitions = @partitioner.partition(@graph.map {|v| v[:id]}, @workers.size)
         debug "done partitioner: #{@partitioner}"
@@ -214,10 +143,6 @@ module Elaine
       def init_superstep
          # execute a superstep and wait for workers to complete
           debug "Initializing superstep"
-          # step = @workers.select do |w|
-          #   debug "Checking for active vertices on node #{w}"
-          #   DCell::Node[w][:worker].active?
-          # end.map {|w| DCell::Node[w][:worker].future(:init_superstep)}
 
           step = @workers.map { |w| DCell::Node[w][:worker].future(:init_superstep)}
           step.map { |f| f.value }
@@ -226,9 +151,7 @@ module Elaine
 
       def superstep
         init_superstep
-        # step = @workers.select do |w|
-        #   DCell::Node[w][:worker].active?
-        # end.map {|w| DCell::Node[w][:worker].future(:superstep)}
+      
         debug "Executing superstep on workers"
         step = @workers.map { |w| DCell::Node[w][:worker].future(:superstep)}
         step.map { |f| f.value }
@@ -236,7 +159,6 @@ module Elaine
       end
 
       def active_worker_count
-        # @workers.select { |w| DCell::Node[w][:worker].active? }.size
         to_test = @workers.map { |w| DCell::Node[w][:worker].future(:active?)}
         to_test.map { |f| f.value ? 1 : 0 }.reduce(:+)
       end
@@ -251,17 +173,7 @@ module Elaine
           step_num += 1
           debug "Running superstep #{step_num}"
           superstep
-         
-         # init_superstep
-
-         #  debug "Running superstep #{step_num}"
-         #  step = @workers.select do |w|
-         #    DCell::Node[w][:worker].active > 0
-         #  end.map {|w| DCell::Node[w][:worker].future(:superstep)}
-
-         #  step.map { |f| f.value }
-
-          # break if @workers.select { |w| DCell::Node[w][:worker].active? }.size.zero?
+      
           break if active_worker_count.zero?
         end
         debug "Job finished!"

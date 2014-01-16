@@ -35,6 +35,10 @@ module Elaine
         def measure_deliver_remote(method_name, *args)
           basic_measurement(method_name, "deliver_remote", *args)
         end
+
+        def measure_address(method_name, *args)
+          basic_measurement(method_name, "address", *args)
+        end
         
         protected
 
@@ -72,6 +76,7 @@ module Elaine
         end
 
       end # module InstanceMethods
+      
     end # module PostOfficeInstrument
   end # module Instrument
 end # module Elaine

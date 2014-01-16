@@ -62,7 +62,7 @@ describe Elaine::Instrument::CoordinatorInstrument do
     num_supersteps.should == 5
 
     step_time = num_supersteps * 0.1 # keep in mind that we are running with 3 threads per worker
-    measurements["superstep"].reduce(:+).should be_within(0.2).of(step_time)
+    measurements["superstep"].reduce(:+).should be_within(0.25).of(step_time)
 
 
 

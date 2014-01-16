@@ -5,7 +5,6 @@ module Elaine
   module Instrument
     module CoordinatorInstrument
       include Elaine::Instrument
-      # extend Elaine::Instruments::Instrument
 
       class << self
         def included(klass)
@@ -28,8 +27,7 @@ module Elaine
         end
 
         protected
-
-
+        
         def measure(label="")
           instrument_measurements[label] ||= []
 
@@ -39,9 +37,8 @@ module Elaine
           instrument_measurements[label] << measurement.real
           v
         end
-    
-      end
-      # end
+      end # module InstanceMethods
+
     end # module CoordinatorInstrument
   end # module Instrument
 end # module Elaine
